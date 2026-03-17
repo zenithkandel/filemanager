@@ -167,41 +167,145 @@ export function createOperationsModule(deps) {
         } catch (err) { toast(err.message, 'error'); }
     }
 
+    const MONACO_CDN = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min';
+    let monacoReady = null;
+
+    function loadMonaco() {
+        if (monacoReady) return monacoReady;
+        monacoReady = new Promise((resolve, reject) => {
+            if (window.monaco) { resolve(window.monaco); return; }
+            const loaderScript = document.createElement('script');
+            loaderScript.src = `${MONACO_CDN}/vs/loader.js`;
+            loaderScript.onload = () => {
+                window.require.config({ paths: { vs: `${MONACO_CDN}/vs` } });
+                window.require(['vs/editor/editor.main'], () => resolve(window.monaco), reject);
+            };
+            loaderScript.onerror = () => reject(new Error('Failed to load Monaco Editor'));
+            document.head.appendChild(loaderScript);
+        });
+        return monacoReady;
+    }
+
+    function getMonacoTheme() {
+        return document.documentElement.getAttribute('data-theme') === 'dark' ? 'vs-dark' : 'vs';
+    }
+
+    function getLanguageForFile(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const map = {
+            js: 'javascript', mjs: 'javascript', cjs: 'javascript',
+            ts: 'typescript', tsx: 'typescript', jsx: 'javascript',
+            json: 'json', jsonc: 'json',
+            html: 'html', htm: 'html',
+            css: 'css', scss: 'scss', less: 'less',
+            php: 'php', py: 'python', rb: 'ruby',
+            java: 'java', c: 'c', cpp: 'cpp', h: 'c', hpp: 'cpp',
+            cs: 'csharp', go: 'go', rs: 'rust', swift: 'swift', kt: 'kotlin',
+            lua: 'lua', r: 'r', dart: 'dart',
+            sh: 'shell', bash: 'shell', zsh: 'shell',
+            sql: 'sql', xml: 'xml', svg: 'xml',
+            yaml: 'yaml', yml: 'yaml', toml: 'ini',
+            md: 'markdown', markdown: 'markdown',
+            txt: 'plaintext', log: 'plaintext', ini: 'ini', cfg: 'ini', conf: 'ini',
+            env: 'plaintext', csv: 'plaintext',
+            dockerfile: 'dockerfile',
+        };
+        return map[ext] || 'plaintext';
+    }
+
     async function editFile(item) {
         try {
             const data = await api('read', { params: { path: item.path } });
+
             showModal(`Edit: ${item.name}`, `
-                <textarea class="editor-textarea" id="editor-content" spellcheck="false">${escHtml(data.content)}</textarea>
+                <div id="monaco-container" style="height:70vh;border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+                    <div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted)">Loading editor...</div>
+                </div>
             `, [
-                { label: 'Cancel', cls: '', action: closeModal },
+                { label: 'Cancel', cls: '', action: () => { editorInstance = null; closeModal(); } },
                 {
                     label: 'Save', cls: 'btn-primary', action: async () => {
-                        const content = document.getElementById('editor-content').value;
+                        if (!editorInstance) return;
+                        const content = editorInstance.getValue();
                         try {
                             await api('save', { method: 'POST', body: { path: item.path, content } });
                             toast('File saved.', 'success');
+                            editorInstance = null;
                             closeModal();
                         } catch (err) { toast(err.message, 'error'); }
                     }
                 },
             ], 'modal-xl');
 
-            const textarea = document.getElementById('editor-content');
-            if (textarea) {
-                textarea.addEventListener('keydown', (e) => {
-                    if (e.key === 'Tab') {
-                        e.preventDefault();
-                        const start = textarea.selectionStart;
-                        const end = textarea.selectionEnd;
-                        textarea.value = textarea.value.substring(0, start) + '    ' + textarea.value.substring(end);
-                        textarea.selectionStart = textarea.selectionEnd = start + 4;
-                    }
-                    if (e.ctrlKey && e.key === 's') {
-                        e.preventDefault();
-                        document.querySelector('.modal-footer .btn-primary')?.click();
+            let editorInstance = null;
+            try {
+                const monaco = await loadMonaco();
+                const container = document.getElementById('monaco-container');
+                if (!container) return;
+                container.innerHTML = '';
+
+                editorInstance = monaco.editor.create(container, {
+                    value: data.content,
+                    language: getLanguageForFile(item.name),
+                    theme: getMonacoTheme(),
+                    automaticLayout: true,
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    lineNumbers: 'on',
+                    scrollBeyondLastLine: false,
+                    wordWrap: 'on',
+                    tabSize: 4,
+                    insertSpaces: true,
+                    renderWhitespace: 'selection',
+                });
+
+                editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+                    document.querySelector('.modal-footer .btn-primary')?.click();
+                });
+
+                // Sync theme when toggled
+                const themeObserver = new MutationObserver(() => {
+                    if (editorInstance) {
+                        monaco.editor.setTheme(getMonacoTheme());
                     }
                 });
-                textarea.focus();
+                themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+                // Clean up observer when modal closes
+                const overlay = document.getElementById('modal-overlay');
+                const cleanup = new MutationObserver(() => {
+                    if (overlay.classList.contains('hidden')) {
+                        themeObserver.disconnect();
+                        cleanup.disconnect();
+                        editorInstance = null;
+                    }
+                });
+                cleanup.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+
+                editorInstance.focus();
+            } catch {
+                // Fallback to textarea if Monaco fails to load
+                const container = document.getElementById('monaco-container');
+                if (container) {
+                    container.innerHTML = `<textarea class="editor-textarea" id="editor-content" spellcheck="false" style="width:100%;height:100%;border:none;resize:none;padding:12px;font-family:monospace;font-size:14px;">${escHtml(data.content)}</textarea>`;
+                    const textarea = document.getElementById('editor-content');
+                    if (textarea) {
+                        textarea.addEventListener('keydown', (e) => {
+                            if (e.key === 'Tab') {
+                                e.preventDefault();
+                                const s = textarea.selectionStart, end = textarea.selectionEnd;
+                                textarea.value = textarea.value.substring(0, s) + '    ' + textarea.value.substring(end);
+                                textarea.selectionStart = textarea.selectionEnd = s + 4;
+                            }
+                            if (e.ctrlKey && e.key === 's') {
+                                e.preventDefault();
+                                document.querySelector('.modal-footer .btn-primary')?.click();
+                            }
+                        });
+                        textarea.focus();
+                    }
+                }
+                toast('Monaco Editor unavailable, using fallback editor.', 'warning');
             }
         } catch (err) { toast(err.message, 'error'); }
     }
@@ -273,7 +377,7 @@ export function createOperationsModule(deps) {
         clearTimeout(searchTimer);
         const clearBtn = document.getElementById('search-clear');
 
-        if (!query || query.length < 1) {
+        if (!query || query.length < 2) {
             clearBtn.classList.add('hidden');
             if (state.searchMode) {
                 state.searchMode = false;

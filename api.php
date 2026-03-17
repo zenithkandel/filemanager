@@ -332,7 +332,7 @@ function api_search(): void
 
             $isDir = is_dir($full);
 
-            if (stripos($entry, $queryLower) !== false) {
+            if (stripos($entry, $query) !== false) {
                 $stat = @stat($full);
                 $ext = $isDir ? '' : fm_ext($entry);
                 $results[] = [

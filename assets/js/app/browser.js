@@ -18,9 +18,17 @@ export function createBrowserModule(deps) {
 
     async function navigate(path) {
         state.path = normalizePath(path);
-        state.searchMode = false;
         state.selected.clear();
         updateSelectionUI();
+
+        // Clear search state and input when navigating
+        if (state.searchMode) {
+            state.searchMode = false;
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) searchInput.value = '';
+            const clearBtn = document.getElementById('search-clear');
+            if (clearBtn) clearBtn.classList.add('hidden');
+        }
 
         setLoading(true);
         try {
