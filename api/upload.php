@@ -59,12 +59,6 @@ function api_upload(): void
             continue;
         }
 
-        // Block dangerous extensions
-        if (fm_is_blocked_ext($name)) {
-            $errors[] = "$name: File type is blocked for security.";
-            continue;
-        }
-
         // Size check
         if ($size > MAX_UPLOAD_SIZE) {
             $errors[] = "$name: File too large.";

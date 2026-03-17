@@ -11,10 +11,6 @@ function api_read(): void
     if ($real === false || !is_file($real))
         json_error('File not found.');
 
-    if (!fm_is_text_editable_file($real)) {
-        json_error('This file type cannot be edited.');
-    }
-
     $maxEdit = 5 * 1024 * 1024; // 5 MB limit for editing
     if (filesize($real) > $maxEdit) {
         json_error('File too large to edit (max 5 MB).');

@@ -39,8 +39,6 @@ function api_mkfile(): void
     $name = basename(trim($data['name']));
     if ($name === '' || $name === '.' || $name === '..')
         json_error('Invalid name.');
-    if (fm_is_blocked_ext($name))
-        json_error('File type is blocked.');
 
     $parentPath = $data['path'] ?: '/';
     $parent = ($parentPath === '' || $parentPath === '/') ? BASE_DIR : fm_validate_path($parentPath);
@@ -71,11 +69,6 @@ function api_rename(): void
     $newName = basename(trim($data['name']));
     if ($newName === '' || $newName === '.' || $newName === '..')
         json_error('Invalid name.');
-
-    // Block renaming files to dangerous extensions
-    if (!is_dir($real) && fm_is_blocked_ext($newName)) {
-        json_error('File type is blocked.');
-    }
 
     $newPath = dirname($real) . DIRECTORY_SEPARATOR . $newName;
     if (file_exists($newPath) && $real !== $newPath)

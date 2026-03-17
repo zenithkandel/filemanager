@@ -50,11 +50,6 @@ function api_extract(): void
             json_error('Archive contains unsafe paths.');
         }
 
-        // Block dangerous file types
-        if (fm_is_blocked_ext($normalized)) {
-            $zip->close();
-            json_error("Archive contains blocked file type: $entryName");
-        }
     }
 
     $numFiles = $zip->numFiles;
@@ -77,8 +72,6 @@ function api_compress(): void
         json_error('No paths specified.');
 
     $archiveName = trim($data['name'] ?? 'archive') . '.zip';
-    if (fm_is_blocked_ext($archiveName))
-        json_error('Invalid archive name.');
 
     // Determine destination directory (parent of first item)
     $firstReal = fm_validate_path($data['paths'][0]);
