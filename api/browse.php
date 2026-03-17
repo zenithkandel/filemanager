@@ -1,5 +1,8 @@
 <?php
-if (!defined('FM_ACCESS')) { http_response_code(403); exit('Forbidden'); }
+if (!defined('FM_ACCESS')) {
+    http_response_code(403);
+    exit('Forbidden');
+}
 
 function api_list(): void
 {
