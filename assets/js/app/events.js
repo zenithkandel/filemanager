@@ -48,6 +48,7 @@ export function createEventsModule(deps) {
         };
 
         const searchInput = document.getElementById('search-input');
+        const addressInput = byId('address-bar-input');
         searchInput?.addEventListener('input', (e) => handleSearch(e.target.value.trim()));
         on('search-clear', 'click', () => {
             searchInput.value = '';
@@ -80,6 +81,18 @@ export function createEventsModule(deps) {
 
         on('btn-view-list', 'click', () => setView('list'));
         on('btn-view-grid', 'click', () => setView('grid'));
+
+        on('btn-go-path', 'click', () => {
+            const targetPath = addressInput?.value?.trim() || '/';
+            navigate(targetPath);
+        });
+        addressInput?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const targetPath = addressInput.value.trim() || '/';
+                navigate(targetPath);
+            }
+        });
 
         document.querySelectorAll('.sortable').forEach(el => {
             el.addEventListener('click', () => {

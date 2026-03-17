@@ -22,6 +22,7 @@ export function createBrowserModule(deps) {
         state.path = normalizePath(path);
         state.selected.clear();
         updateSelectionUI();
+        updateAddressBar();
 
         // Clear search state and input when navigating
         if (state.searchMode) {
@@ -41,6 +42,7 @@ export function createBrowserModule(deps) {
             setSessionPref(state, 'path', state.path);
             renderFileList();
             renderBreadcrumb();
+            updateAddressBar();
             updateStatusBar();
         } catch (err) {
             toast(err.message, 'error');
@@ -51,7 +53,15 @@ export function createBrowserModule(deps) {
 
     function normalizePath(p) {
         if (!p || p === '/') return '/';
-        return p.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/\/$/, '');
+        let normalized = String(p).trim().replace(/\\/g, '/').replace(/\/+/g, '/');
+        if (!normalized.startsWith('/')) normalized = '/' + normalized;
+        normalized = normalized.replace(/\/$/, '');
+        return normalized || '/';
+    }
+
+    function updateAddressBar() {
+        const input = document.getElementById('address-bar-input');
+        if (input) input.value = state.path || '/';
     }
 
     function renderFileList() {
@@ -368,5 +378,6 @@ export function createBrowserModule(deps) {
         setView,
         updateViewToggle,
         updateSortUI,
+        updateAddressBar,
     };
 }

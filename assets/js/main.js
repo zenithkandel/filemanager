@@ -20,6 +20,7 @@ function initApp() {
     events.bindEvents();
     browser.updateUserUI();
     browser.updateViewToggle();
+    browser.updateAddressBar();
     browser.navigate(state.path);
 }
 

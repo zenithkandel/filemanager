@@ -193,7 +193,19 @@ $settings = fm_load_settings();
         <!-- Toolbar -->
         <div id="toolbar">
             <div class="toolbar-left">
-                <nav id="breadcrumb" aria-label="Breadcrumb"><a href="#" data-path="/">/</a></nav>
+                <div class="address-bar-wrap">
+                    <div class="address-bar">
+                        <input type="text" id="address-bar-input" placeholder="/" autocomplete="off" spellcheck="false"
+                            aria-label="Path">
+                        <button class="btn btn-icon btn-xs" id="btn-go-path" title="Go to path">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+                    <nav id="breadcrumb" aria-label="Breadcrumb"><a href="#" data-path="/">/</a></nav>
+                </div>
             </div>
             <div class="toolbar-right">
                 <div class="btn-group" id="selection-actions" style="display:none">
