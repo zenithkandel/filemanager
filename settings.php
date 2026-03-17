@@ -7,7 +7,8 @@
 require_once __DIR__ . '/auth.php';
 
 // ── Public settings (safe for frontend) ─────────────────────────
-function publicSettings(array $settings): array {
+function publicSettings(array $settings): array
+{
     $public = $settings;
     // Never expose password hashes to frontend
     unset($public['password_user'], $public['password_admin']);
@@ -15,13 +16,19 @@ function publicSettings(array $settings): array {
 }
 
 // ── Update settings with validation ─────────────────────────────
-function updateSettings(array $input, array $currentSettings): array {
+function updateSettings(array $input, array $currentSettings): array
+{
     $settings = $currentSettings;
 
     // Boolean fields
     $booleans = [
-        'use_parent_dir', 'show_hidden', 'allow_upload', 'allow_delete',
-        'allow_php_upload', 'allow_edit_protected', 'disable_path_restrictions',
+        'use_parent_dir',
+        'show_hidden',
+        'allow_upload',
+        'allow_delete',
+        'allow_php_upload',
+        'allow_edit_protected',
+        'disable_path_restrictions',
     ];
     foreach ($booleans as $key) {
         if (isset($input[$key])) {

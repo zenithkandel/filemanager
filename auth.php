@@ -7,25 +7,32 @@
 require_once __DIR__ . '/config.php';
 
 // ── Auth helpers ────────────────────────────────────────────────
-function isLoggedIn(): bool {
+function isLoggedIn(): bool
+{
     return !empty($_SESSION['fm_logged_in']);
 }
 
-function getUserRole(): string {
+function getUserRole(): string
+{
     return $_SESSION['fm_role'] ?? 'guest';
 }
 
-function isAdmin(): bool {
+function isAdmin(): bool
+{
     return getUserRole() === 'admin';
 }
 
-function isAdminVerified(): bool {
-    if (!isAdmin()) return false;
-    if (empty($_SESSION['fm_admin_verified_at'])) return false;
+function isAdminVerified(): bool
+{
+    if (!isAdmin())
+        return false;
+    if (empty($_SESSION['fm_admin_verified_at']))
+        return false;
     return (time() - $_SESSION['fm_admin_verified_at']) < FM_ADMIN_TTL;
 }
 
-function loginUser(string $role): void {
+function loginUser(string $role): void
+{
     session_regenerate_id(true);
     $_SESSION['fm_logged_in'] = true;
     $_SESSION['fm_role'] = $role;
@@ -36,37 +43,49 @@ function loginUser(string $role): void {
     }
 }
 
-function verifyAdmin(): bool {
-    if (!isAdmin()) return false;
+function verifyAdmin(): bool
+{
+    if (!isAdmin())
+        return false;
     $_SESSION['fm_admin_verified_at'] = time();
     return true;
 }
 
-function logoutUser(): void {
+function logoutUser(): void
+{
     $_SESSION = [];
     if (ini_get('session.use_cookies')) {
         $p = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-            $p['path'], $p['domain'], $p['secure'], $p['httponly']
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $p['path'],
+            $p['domain'],
+            $p['secure'],
+            $p['httponly']
         );
     }
     session_destroy();
 }
 
-function requireLogin(): void {
+function requireLogin(): void
+{
     if (!isLoggedIn()) {
         jsonResponse(['error' => 'Authentication required'], 401);
     }
 }
 
-function requireAdmin(): void {
+function requireAdmin(): void
+{
     requireLogin();
     if (!isAdmin()) {
         jsonResponse(['error' => 'Admin access required'], 403);
     }
 }
 
-function requireAdminVerified(): void {
+function requireAdminVerified(): void
+{
     requireAdmin();
     if (!isAdminVerified()) {
         jsonResponse(['error' => 'Admin re-verification required', 'needs_verify' => true], 403);
