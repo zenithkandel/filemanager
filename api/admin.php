@@ -93,7 +93,8 @@ function api_purge_cache(): void
     require_admin();
     require_reauth();
 
-    if (CLOUDFLARE_API_TOKEN === '') {
+    $apiToken = fm_cloudflare_api_token();
+    if ($apiToken === '') {
         json_error('Cloudflare API token is not configured on the server.');
     }
 
@@ -103,7 +104,7 @@ function api_purge_cache(): void
     }
 
     $headers = [
-        'Authorization: Bearer ' . CLOUDFLARE_API_TOKEN,
+        'Authorization: Bearer ' . $apiToken,
         'Content-Type: application/json',
         'Accept: application/json',
     ];
