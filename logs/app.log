@@ -17,3 +17,8 @@
 [2026-03-17 12:50:02] [INFO] [::1] [admin] REAUTH_OK — User: admin
 [2026-03-17 12:50:04] [INFO] [::1] [admin] PURGE_CACHE — ab0b321755660e78deb54b58267533ea
 [2026-03-17 13:11:42] [INFO] [::1] [admin] MKDIR — filemanager\New Folder
+[2026-03-17 13:15:45] [INFO] [::1] [admin] UPLOAD — filemanager\New Folder\auth.php
+[2026-03-17 13:15:45] [INFO] [::1] [admin] UPLOAD — filemanager\New Folder\config.php
+[2026-03-17 13:15:45] [INFO] [::1] [admin] UPLOAD — filemanager\New Folder\index.php
+[2026-03-17 13:15:45] [INFO] [::1] [admin] UPLOAD — filemanager\New Folder\.htaccess
+[2026-03-17 13:15:45] [INFO] [::1] [admin] UPLOAD — filemanager\New Folder\api.php
