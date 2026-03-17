@@ -215,7 +215,7 @@ export function createOperationsModule(deps) {
 
     function getMonacoTheme() {
         const html = document.documentElement;
-        const resolved = html.getAttribute('data-resolvedTheme');
+        const resolved = html.dataset.resolvedTheme || html.getAttribute('data-resolved-theme');
         const configured = html.getAttribute('data-theme');
         const theme = resolved || configured || 'light';
         return theme === 'dark' ? 'vs-dark' : 'vs';
@@ -302,7 +302,7 @@ export function createOperationsModule(deps) {
                 });
                 themeObserver.observe(document.documentElement, {
                     attributes: true,
-                    attributeFilter: ['data-theme', 'data-resolvedTheme']
+                    attributeFilter: ['data-theme', 'data-resolved-theme']
                 });
 
                 // Clean up observer when modal closes
