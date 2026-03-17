@@ -1,11 +1,13 @@
 <?php
 require_once 'config.php';
 
-function is_logged_in() {
+function is_logged_in()
+{
     return isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true;
 }
 
-function is_admin() {
+function is_admin()
+{
     return isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
 }
 

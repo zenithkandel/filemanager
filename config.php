@@ -27,7 +27,8 @@ if (!$BASE_DIR) {
     die("Configuration Error: Invalid base directory.");
 }
 
-function get_real_path($path) {
+function get_real_path($path)
+{
     global $BASE_DIR;
     $full_path = realpath($BASE_DIR . '/' . trim($path, '/'));
     if ($full_path && strpos($full_path, $BASE_DIR) === 0) {
