@@ -39,8 +39,8 @@
         doc: '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
     };
 
-    const CODE_EXTS = ['js','mjs','cjs','ts','tsx','jsx','vue','svelte','json','jsonc','xml','svg','html','htm','css','scss','sass','less','php','py','rb','java','c','cpp','h','hpp','cs','go','rs','swift','kt','lua','r','dart','sh','bash','zsh','sql','yaml','yml','toml','makefile','dockerfile','asm'];
-    const DOC_EXTS = ['txt','md','markdown','csv','log','ini','cfg','conf','env','properties','lock'];
+    const CODE_EXTS = ['js', 'mjs', 'cjs', 'ts', 'tsx', 'jsx', 'vue', 'svelte', 'json', 'jsonc', 'xml', 'svg', 'html', 'htm', 'css', 'scss', 'sass', 'less', 'php', 'py', 'rb', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'swift', 'kt', 'lua', 'r', 'dart', 'sh', 'bash', 'zsh', 'sql', 'yaml', 'yml', 'toml', 'makefile', 'dockerfile', 'asm'];
+    const DOC_EXTS = ['txt', 'md', 'markdown', 'csv', 'log', 'ini', 'cfg', 'conf', 'env', 'properties', 'lock'];
 
     // ═══════════════════════════════════════════════════════════════════════
     //  API LAYER
@@ -187,11 +187,13 @@
                 </div>
             `, [
                 { label: 'Cancel', cls: '', action: () => { closeModal(); resolve(null); } },
-                { label: 'Confirm', cls: 'btn-primary', action: () => {
-                    const pw = document.getElementById('reauth-pass')?.value || '';
-                    closeModal();
-                    resolve(pw || null);
-                }},
+                {
+                    label: 'Confirm', cls: 'btn-primary', action: () => {
+                        const pw = document.getElementById('reauth-pass')?.value || '';
+                        closeModal();
+                        resolve(pw || null);
+                    }
+                },
             ]);
             setTimeout(() => document.getElementById('reauth-pass')?.focus(), 100);
         });
@@ -657,14 +659,16 @@
                 <textarea class="editor-textarea" id="editor-content" spellcheck="false">${escHtml(data.content)}</textarea>
             `, [
                 { label: 'Cancel', cls: '', action: closeModal },
-                { label: 'Save', cls: 'btn-primary', action: async () => {
-                    const content = document.getElementById('editor-content').value;
-                    try {
-                        await api('save', { method: 'POST', body: { path: item.path, content } });
-                        toast('File saved.', 'success');
-                        closeModal();
-                    } catch (err) { toast(err.message, 'error'); }
-                }},
+                {
+                    label: 'Save', cls: 'btn-primary', action: async () => {
+                        const content = document.getElementById('editor-content').value;
+                        try {
+                            await api('save', { method: 'POST', body: { path: item.path, content } });
+                            toast('File saved.', 'success');
+                            closeModal();
+                        } catch (err) { toast(err.message, 'error'); }
+                    }
+                },
             ], 'modal-xl');
 
             // Enable tab key in textarea
@@ -850,10 +854,12 @@
             items.push('---');
             items.push({ label: 'Properties', icon: 'info', action: () => showFileInfo(item) });
             items.push('---');
-            items.push({ label: 'Delete', icon: 'delete', cls: 'text-danger', action: () => {
-                const paths = state.selected.size > 0 ? [...state.selected] : [item.path];
-                deleteItems(paths);
-            }});
+            items.push({
+                label: 'Delete', icon: 'delete', cls: 'text-danger', action: () => {
+                    const paths = state.selected.size > 0 ? [...state.selected] : [item.path];
+                    deleteItems(paths);
+                }
+            });
         } else {
             // Background context menu
             if (state.clipboard) {
@@ -1041,17 +1047,19 @@
             <div class="form-group"><label>Confirm Password</label><input type="password" id="cp-confirm"></div>
         `, [
             { label: 'Cancel', cls: '', action: closeModal },
-            { label: 'Change', cls: 'btn-primary', action: async () => {
-                const old = document.getElementById('cp-old').value;
-                const _new = document.getElementById('cp-new').value;
-                const confirm = document.getElementById('cp-confirm').value;
-                if (_new !== confirm) { toast('Passwords do not match.', 'error'); return; }
-                try {
-                    await api('change_password', { method: 'POST', body: { old_password: old, new_password: _new } });
-                    toast('Password changed.', 'success');
-                    closeModal();
-                } catch (err) { toast(err.message, 'error'); }
-            }},
+            {
+                label: 'Change', cls: 'btn-primary', action: async () => {
+                    const old = document.getElementById('cp-old').value;
+                    const _new = document.getElementById('cp-new').value;
+                    const confirm = document.getElementById('cp-confirm').value;
+                    if (_new !== confirm) { toast('Passwords do not match.', 'error'); return; }
+                    try {
+                        await api('change_password', { method: 'POST', body: { old_password: old, new_password: _new } });
+                        toast('Password changed.', 'success');
+                        closeModal();
+                    } catch (err) { toast(err.message, 'error'); }
+                }
+            },
         ]);
         setTimeout(() => document.getElementById('cp-old')?.focus(), 100);
     }
@@ -1070,8 +1078,8 @@
             <div class="setting-row">
                 <div><div class="setting-label">Default View</div><div class="setting-desc">Choose list or grid view</div></div>
                 <select id="s-view" style="padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text)">
-                    <option value="list" ${s.default_view==='list'?'selected':''}>List</option>
-                    <option value="grid" ${s.default_view==='grid'?'selected':''}>Grid</option>
+                    <option value="list" ${s.default_view === 'list' ? 'selected' : ''}>List</option>
+                    <option value="grid" ${s.default_view === 'grid' ? 'selected' : ''}>Grid</option>
                 </select>
             </div>
             <div class="setting-row">
@@ -1081,42 +1089,44 @@
             <div class="setting-row">
                 <div><div class="setting-label">Theme</div><div class="setting-desc">Application color scheme</div></div>
                 <select id="s-theme" style="padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text)">
-                    <option value="auto" ${s.theme==='auto'?'selected':''}>Auto</option>
-                    <option value="light" ${s.theme==='light'?'selected':''}>Light</option>
-                    <option value="dark" ${s.theme==='dark'?'selected':''}>Dark</option>
+                    <option value="auto" ${s.theme === 'auto' ? 'selected' : ''}>Auto</option>
+                    <option value="light" ${s.theme === 'light' ? 'selected' : ''}>Light</option>
+                    <option value="dark" ${s.theme === 'dark' ? 'selected' : ''}>Dark</option>
                 </select>
             </div>
             <div class="setting-row">
                 <div><div class="setting-label">Date Format</div><div class="setting-desc">Format for file dates</div></div>
                 <select id="s-datefmt" style="padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text)">
-                    <option value="Y-m-d H:i" ${s.date_format==='Y-m-d H:i'?'selected':''}>2024-01-15 14:30</option>
-                    <option value="d/m/Y H:i" ${s.date_format==='d/m/Y H:i'?'selected':''}>15/01/2024 14:30</option>
-                    <option value="m/d/Y h:i A" ${s.date_format==='m/d/Y h:i A'?'selected':''}>01/15/2024 02:30 PM</option>
-                    <option value="relative" ${s.date_format==='relative'?'selected':''}>Relative (2 hours ago)</option>
+                    <option value="Y-m-d H:i" ${s.date_format === 'Y-m-d H:i' ? 'selected' : ''}>2024-01-15 14:30</option>
+                    <option value="d/m/Y H:i" ${s.date_format === 'd/m/Y H:i' ? 'selected' : ''}>15/01/2024 14:30</option>
+                    <option value="m/d/Y h:i A" ${s.date_format === 'm/d/Y h:i A' ? 'selected' : ''}>01/15/2024 02:30 PM</option>
+                    <option value="relative" ${s.date_format === 'relative' ? 'selected' : ''}>Relative (2 hours ago)</option>
                 </select>
             </div>
         `;
 
         showModal('Settings', html, [
             { label: 'Cancel', cls: '', action: closeModal },
-            { label: 'Save', cls: 'btn-primary', action: async () => {
-                const newSettings = {
-                    show_hidden: document.getElementById('s-hidden').checked,
-                    default_view: document.getElementById('s-view').value,
-                    enable_trash: document.getElementById('s-trash').checked,
-                    theme: document.getElementById('s-theme').value,
-                    date_format: document.getElementById('s-datefmt').value,
-                };
-                try {
-                    const resp = await api('settings', { method: 'POST', body: newSettings });
-                    state.settings = resp.settings;
-                    document.documentElement.dataset.theme = state.settings.theme;
-                    resolveTheme();
-                    toast('Settings saved.', 'success');
-                    closeModal();
-                    navigate(state.path);
-                } catch (err) { toast(err.message, 'error'); }
-            }},
+            {
+                label: 'Save', cls: 'btn-primary', action: async () => {
+                    const newSettings = {
+                        show_hidden: document.getElementById('s-hidden').checked,
+                        default_view: document.getElementById('s-view').value,
+                        enable_trash: document.getElementById('s-trash').checked,
+                        theme: document.getElementById('s-theme').value,
+                        date_format: document.getElementById('s-datefmt').value,
+                    };
+                    try {
+                        const resp = await api('settings', { method: 'POST', body: newSettings });
+                        state.settings = resp.settings;
+                        document.documentElement.dataset.theme = state.settings.theme;
+                        resolveTheme();
+                        toast('Settings saved.', 'success');
+                        closeModal();
+                        navigate(state.path);
+                    } catch (err) { toast(err.message, 'error'); }
+                }
+            },
         ]);
     }
 
@@ -1214,11 +1224,13 @@
                 </div>
             `, [
                 { label: 'Cancel', cls: '', action: () => { closeModal(); resolve(null); } },
-                { label: 'OK', cls: 'btn-primary', action: () => {
-                    const v = document.getElementById('prompt-input')?.value?.trim() || '';
-                    closeModal();
-                    resolve(v || null);
-                }},
+                {
+                    label: 'OK', cls: 'btn-primary', action: () => {
+                        const v = document.getElementById('prompt-input')?.value?.trim() || '';
+                        closeModal();
+                        resolve(v || null);
+                    }
+                },
             ]);
 
             setTimeout(() => {
