@@ -338,6 +338,9 @@
             showContextMenu(e, item);
         });
 
+        // Enable drag-to-move between folders
+        enableFileDragMove(el, item);
+
         return el;
     }
 
@@ -707,12 +710,14 @@
                 <svg viewBox="0 0 24 24" width="64" height="64" style="color:var(--primary);margin-bottom:20px"><path d="M9 18V5l12-2v13" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="18" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="16" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
                 <audio class="preview-audio" src="${url}" controls autoplay style="width:100%"></audio>
             </div>`;
+        } else if (item.ext === 'pdf') {
+            content = `<iframe src="${url}" style="width:100%;height:70vh;border:none;border-radius:var(--radius-sm)"></iframe>`;
         }
 
         showModal(item.name, content, [
             { label: 'Download', cls: '', action: () => downloadFile(item.path) },
             { label: 'Close', cls: 'btn-primary', action: closeModal },
-        ], 'modal-lg');
+        ], item.ext === 'pdf' ? 'modal-xl' : 'modal-lg');
     }
 
     async function showFileInfo(item) {
@@ -841,10 +846,16 @@
             if (item.is_image || item.is_video || item.is_audio) {
                 items.push({ label: 'Preview', icon: 'file', action: () => previewFile(item) });
             }
+            if (item.ext === 'pdf') {
+                items.push({ label: 'Preview', icon: 'file', action: () => previewFile(item) });
+            }
 
             items.push({ label: 'Download', icon: 'download', kbd: '', action: () => downloadFile(item.path) });
             items.push('---');
             items.push({ label: 'Rename', icon: 'rename', kbd: 'F2', action: () => renameItem(item) });
+            if (state.selected.size > 1) {
+                items.push({ label: 'Batch Rename', icon: 'rename', kbd: 'Ctrl+R', action: batchRename });
+            }
             items.push({ label: 'Copy', icon: 'copy', kbd: 'Ctrl+C', action: clipCopy });
             items.push({ label: 'Cut', icon: 'cut', kbd: 'Ctrl+X', action: clipCut });
 
@@ -871,6 +882,7 @@
             items.push({ label: 'New Folder', icon: 'folder', action: createFolder });
             items.push({ label: 'New File', icon: 'file', action: createFile });
             items.push({ label: 'Upload', icon: 'upload', action: () => document.getElementById('file-input').click() });
+            items.push({ label: 'Upload Folder', icon: 'upload', action: uploadFolder });
             items.push('---');
             items.push({ label: 'Refresh', icon: 'refresh', action: () => navigate(state.path) });
             if (state.items.length > 0) {

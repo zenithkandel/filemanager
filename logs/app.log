@@ -1,3 +1,4 @@
 [2026-03-17 09:26:22] [INFO] [::1] [admin] LOGIN_OK — User: admin, Role: admin
 [2026-03-17 09:27:19] [WARN] [::1] [anonymous] LOGIN_FAIL — User: admin
 [2026-03-17 09:33:56] [INFO] [::1] [admin] LOGIN_OK — User: admin, Role: admin
+[2026-03-17 09:37:13] [INFO] [::1] [admin] SETTINGS_UPDATED — {"show_hidden":true,"default_view":"list","items_per_page":100,"enable_trash":true,"max_upload_mb":512,"theme":"auto","date_format":"relative"}
