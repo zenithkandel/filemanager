@@ -40,20 +40,27 @@ export function createEventsModule(deps) {
     } = deps;
 
     function bindEvents() {
+        const byId = (id) => document.getElementById(id);
+        const on = (id, event, handler) => {
+            const el = byId(id);
+            if (!el) return;
+            el.addEventListener(event, handler);
+        };
+
         const searchInput = document.getElementById('search-input');
-        searchInput.addEventListener('input', (e) => handleSearch(e.target.value.trim()));
-        document.getElementById('search-clear').addEventListener('click', () => {
+        searchInput?.addEventListener('input', (e) => handleSearch(e.target.value.trim()));
+        on('search-clear', 'click', () => {
             searchInput.value = '';
             handleSearch('');
         });
 
-        document.getElementById('btn-upload').addEventListener('click', () => document.getElementById('file-input').click());
-        document.getElementById('btn-upload-folder').addEventListener('click', uploadFolder);
-        document.getElementById('btn-new-folder').addEventListener('click', createFolder);
-        document.getElementById('btn-new-file').addEventListener('click', createFile);
-        document.getElementById('btn-paste').addEventListener('click', clipPaste);
+        on('btn-upload', 'click', () => byId('file-input')?.click());
+        on('btn-upload-folder', 'click', uploadFolder);
+        on('btn-new-folder', 'click', createFolder);
+        on('btn-new-file', 'click', createFile);
+        on('btn-paste', 'click', clipPaste);
 
-        document.getElementById('btn-sel-download').addEventListener('click', () => {
+        on('btn-sel-download', 'click', () => {
             const paths = [...state.selected];
             if (paths.length === 1) {
                 downloadFile(paths[0]);
@@ -61,18 +68,18 @@ export function createEventsModule(deps) {
                 window.open(`${API}?action=bulk_download&paths=${encodeURIComponent(paths.join(','))}`, '_blank');
             }
         });
-        document.getElementById('btn-sel-copy').addEventListener('click', clipCopy);
-        document.getElementById('btn-sel-cut').addEventListener('click', clipCut);
-        document.getElementById('btn-sel-delete').addEventListener('click', () => deleteItems([...state.selected]));
-        document.getElementById('btn-sel-extract').addEventListener('click', extractSelectedArchives);
-        document.getElementById('btn-sel-compress').addEventListener('click', () => compressItems([...state.selected]));
+        on('btn-sel-copy', 'click', clipCopy);
+        on('btn-sel-cut', 'click', clipCut);
+        on('btn-sel-delete', 'click', () => deleteItems([...state.selected]));
+        on('btn-sel-extract', 'click', extractSelectedArchives);
+        on('btn-sel-compress', 'click', () => compressItems([...state.selected]));
 
-        document.getElementById('select-all').addEventListener('change', (e) => {
+        on('select-all', 'change', (e) => {
             e.target.checked ? selectAll() : selectNone();
         });
 
-        document.getElementById('btn-view-list').addEventListener('click', () => setView('list'));
-        document.getElementById('btn-view-grid').addEventListener('click', () => setView('grid'));
+        on('btn-view-list', 'click', () => setView('list'));
+        on('btn-view-grid', 'click', () => setView('grid'));
 
         document.querySelectorAll('.sortable').forEach(el => {
             el.addEventListener('click', () => {
@@ -88,14 +95,14 @@ export function createEventsModule(deps) {
             });
         });
 
-        document.getElementById('user-menu-btn').addEventListener('click', (e) => {
+        on('user-menu-btn', 'click', (e) => {
             e.stopPropagation();
-            document.getElementById('user-dropdown').classList.toggle('open');
+            byId('user-dropdown')?.classList.toggle('open');
         });
 
         document.querySelectorAll('#user-dropdown .dropdown-item').forEach(el => {
             el.addEventListener('click', () => {
-                document.getElementById('user-dropdown').classList.remove('open');
+                byId('user-dropdown')?.classList.remove('open');
                 const action = el.dataset.action;
                 switch (action) {
                     case 'logout': handleLogout(); break;
@@ -109,43 +116,44 @@ export function createEventsModule(deps) {
             });
         });
 
-        document.getElementById('shortcuts-btn').addEventListener('click', showShortcutsHelp);
-        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        on('shortcuts-btn', 'click', showShortcutsHelp);
+        on('theme-toggle', 'click', toggleTheme);
 
-        document.getElementById('modal-close').addEventListener('click', closeModal);
-        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+        on('modal-close', 'click', closeModal);
+        byId('modal-overlay')?.addEventListener('click', (e) => {
             if (e.target === e.currentTarget) closeModal();
         });
 
-        document.getElementById('upload-progress-close').addEventListener('click', () => {
-            document.getElementById('upload-progress').classList.add('hidden');
+        on('upload-progress-close', 'click', () => {
+            byId('upload-progress')?.classList.add('hidden');
         });
 
-        document.getElementById('file-input').addEventListener('change', (e) => {
+        byId('file-input')?.addEventListener('change', (e) => {
             uploadFiles(e.target.files, state.path);
             e.target.value = '';
         });
 
-        const main = document.getElementById('main');
+        const main = byId('main');
+        if (!main) return;
         let dragCounter = 0;
         main.addEventListener('dragenter', (e) => {
             e.preventDefault();
             dragCounter++;
-            document.getElementById('drop-zone').classList.remove('hidden');
+            byId('drop-zone')?.classList.remove('hidden');
         });
         main.addEventListener('dragleave', (e) => {
             e.preventDefault();
             dragCounter--;
             if (dragCounter <= 0) {
                 dragCounter = 0;
-                document.getElementById('drop-zone').classList.add('hidden');
+                byId('drop-zone')?.classList.add('hidden');
             }
         });
         main.addEventListener('dragover', (e) => e.preventDefault());
         main.addEventListener('drop', (e) => {
             e.preventDefault();
             dragCounter = 0;
-            document.getElementById('drop-zone').classList.add('hidden');
+            byId('drop-zone')?.classList.add('hidden');
             const files = e.dataTransfer?.files;
             if (files && files.length > 0) uploadFiles(files, state.path);
         });
@@ -158,7 +166,7 @@ export function createEventsModule(deps) {
 
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#user-menu')) {
-                document.getElementById('user-dropdown').classList.remove('open');
+                byId('user-dropdown')?.classList.remove('open');
             }
             if (!e.target.closest('.context-menu')) {
                 hideContextMenu();
@@ -175,9 +183,9 @@ export function createEventsModule(deps) {
             }
 
             if (e.key === 'Escape') {
-                if (!document.getElementById('modal-overlay').classList.contains('hidden')) {
+                if (!byId('modal-overlay')?.classList.contains('hidden')) {
                     closeModal();
-                } else if (!document.getElementById('context-menu').classList.contains('hidden')) {
+                } else if (!byId('context-menu')?.classList.contains('hidden')) {
                     hideContextMenu();
                 } else {
                     selectNone();
@@ -231,7 +239,7 @@ export function createEventsModule(deps) {
 
             if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
                 e.preventDefault();
-                searchInput.focus();
+                searchInput?.focus();
                 return;
             }
 
@@ -249,7 +257,7 @@ export function createEventsModule(deps) {
 
             if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
                 e.preventDefault();
-                document.getElementById('file-input').click();
+                byId('file-input')?.click();
                 return;
             }
 

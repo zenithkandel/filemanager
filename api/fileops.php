@@ -1,5 +1,8 @@
 <?php
-if (!defined('FM_ACCESS')) { http_response_code(403); exit('Forbidden'); }
+if (!defined('FM_ACCESS')) {
+    http_response_code(403);
+    exit('Forbidden');
+}
 
 function api_mkdir(): void
 {
@@ -15,8 +18,6 @@ function api_mkdir(): void
     $parent = ($parentPath === '' || $parentPath === '/') ? BASE_DIR : fm_validate_path($parentPath);
     if ($parent === false || !is_dir($parent))
         json_error('Invalid parent directory.');
-    if (fm_is_own_directory($parent))
-        json_error('Access denied.');
 
     $full = $parent . DIRECTORY_SEPARATOR . $name;
     if (file_exists($full))
@@ -45,8 +46,6 @@ function api_mkfile(): void
     $parent = ($parentPath === '' || $parentPath === '/') ? BASE_DIR : fm_validate_path($parentPath);
     if ($parent === false || !is_dir($parent))
         json_error('Invalid parent directory.');
-    if (fm_is_own_directory($parent))
-        json_error('Access denied.');
 
     $full = $parent . DIRECTORY_SEPARATOR . $name;
     if (file_exists($full))
@@ -68,8 +67,6 @@ function api_rename(): void
     $real = fm_validate_path($data['path']);
     if ($real === false || !file_exists($real))
         json_error('Not found.');
-    if (fm_is_own_directory($real))
-        json_error('Access denied.');
 
     $newName = basename(trim($data['name']));
     if ($newName === '' || $newName === '.' || $newName === '..')
@@ -100,8 +97,6 @@ function api_delete(): void
     $real = fm_validate_path($data['path']);
     if ($real === false || !file_exists($real))
         json_error('Not found.');
-    if (fm_is_own_directory($real))
-        json_error('Access denied.');
     if ($real === BASE_DIR)
         json_error('Cannot delete root.');
 
@@ -179,7 +174,7 @@ function api_bulk_delete(): void
             $errors[] = "$p: Not found.";
             continue;
         }
-        if (fm_is_own_directory($real) || $real === BASE_DIR) {
+        if ($real === BASE_DIR) {
             $errors[] = "$p: Access denied.";
             continue;
         }

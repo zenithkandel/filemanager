@@ -15,8 +15,6 @@ function api_chmod(): void
     $real = fm_validate_path($data['path']);
     if ($real === false || !file_exists($real))
         json_error('Not found.');
-    if (fm_is_own_directory($real))
-        json_error('Access denied.');
 
     $mode = octdec($data['mode']);
     if ($mode < 0 || $mode > 0777)

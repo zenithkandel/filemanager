@@ -1,5 +1,8 @@
 <?php
-if (!defined('FM_ACCESS')) { http_response_code(403); exit('Forbidden'); }
+if (!defined('FM_ACCESS')) {
+    http_response_code(403);
+    exit('Forbidden');
+}
 
 function api_upload(): void
 {
@@ -9,8 +12,6 @@ function api_upload(): void
     $real = ($path === '' || $path === '/') ? BASE_DIR : fm_validate_path($path);
     if ($real === false || !is_dir($real))
         json_error('Invalid upload directory.');
-    if (fm_is_own_directory($real))
-        json_error('Access denied.');
 
     if (empty($_FILES['files']))
         json_error('No files uploaded.');
@@ -18,8 +19,13 @@ function api_upload(): void
     $files = $_FILES['files'];
     $uploaded = [];
     $errors = [];
+    $skipped = [];
     $preservePaths = !empty($_POST['preserve_paths']);
     $relativePaths = $_POST['relative_paths'] ?? [];
+    $conflictMode = $_POST['conflict_mode'] ?? 'keep_both';
+    if (!in_array($conflictMode, ['keep_both', 'replace', 'skip'], true)) {
+        $conflictMode = 'keep_both';
+    }
 
     // Normalize single file to array
     if (!is_array($files['name'])) {
@@ -79,7 +85,8 @@ function api_upload(): void
                 foreach ($parts as $part) {
                     $part = preg_replace('/[^\w\s\-\.\(\)\[\]]/', '_', $part);
                     $part = trim($part);
-                    if ($part === '' || $part === '.' || $part === '..') continue;
+                    if ($part === '' || $part === '.' || $part === '..')
+                        continue;
                     $safeParts[] = $part;
                 }
                 if (!empty($safeParts)) {
@@ -90,7 +97,7 @@ function api_upload(): void
                     }
                     // Verify the created directory is within BASE_DIR
                     $destDirReal = realpath($destDir);
-                    if ($destDirReal === false || fm_is_own_directory($destDirReal)) {
+                    if ($destDirReal === false) {
                         $errors[] = "$name: Invalid destination directory.";
                         continue;
                     }
@@ -105,16 +112,32 @@ function api_upload(): void
 
         $dest = $destDir . DIRECTORY_SEPARATOR . $name;
 
-        // If file exists, append numbered suffix
+        // Handle conflicts according to requested mode.
         if (file_exists($dest)) {
-            $base = pathinfo($name, PATHINFO_FILENAME);
-            $ext = pathinfo($name, PATHINFO_EXTENSION);
-            $n = 1;
-            while (file_exists($dest)) {
-                $dest = $destDir . DIRECTORY_SEPARATOR . $base . " ($n)" . ($ext ? ".$ext" : '');
-                $n++;
+            if ($conflictMode === 'skip') {
+                $skipped[] = $name;
+                continue;
             }
-            $name = basename($dest);
+
+            if ($conflictMode === 'replace') {
+                if (is_dir($dest)) {
+                    $errors[] = "$name: Cannot replace existing directory.";
+                    continue;
+                }
+                if (!@unlink($dest)) {
+                    $errors[] = "$name: Failed to replace existing file.";
+                    continue;
+                }
+            } else {
+                $base = pathinfo($name, PATHINFO_FILENAME);
+                $ext = pathinfo($name, PATHINFO_EXTENSION);
+                $n = 1;
+                while (file_exists($dest)) {
+                    $dest = $destDir . DIRECTORY_SEPARATOR . $base . " ($n)" . ($ext ? ".$ext" : '');
+                    $n++;
+                }
+                $name = basename($dest);
+            }
         }
 
         if (!move_uploaded_file($tmp, $dest)) {
@@ -128,6 +151,7 @@ function api_upload(): void
 
     json_ok([
         'uploaded' => $uploaded,
+        'skipped' => $skipped,
         'errors' => $errors,
         'count' => count($uploaded),
     ]);

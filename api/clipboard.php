@@ -1,5 +1,8 @@
 <?php
-if (!defined('FM_ACCESS')) { http_response_code(403); exit('Forbidden'); }
+if (!defined('FM_ACCESS')) {
+    http_response_code(403);
+    exit('Forbidden');
+}
 
 function api_move(): void
 {
@@ -11,15 +14,13 @@ function api_move(): void
     $destDir = ($data['to'] === '' || $data['to'] === '/') ? BASE_DIR : fm_validate_path($data['to']);
     if ($destDir === false || !is_dir($destDir))
         json_error('Invalid destination.');
-    if (fm_is_own_directory($destDir))
-        json_error('Access denied.');
 
     $moved = [];
     foreach ($paths as $p) {
         $real = fm_validate_path($p);
         if ($real === false || !file_exists($real))
             continue;
-        if (fm_is_own_directory($real) || $real === BASE_DIR)
+        if ($real === BASE_DIR)
             continue;
 
         $dest = $destDir . DIRECTORY_SEPARATOR . basename($real);
@@ -51,15 +52,11 @@ function api_copy(): void
     $destDir = ($data['to'] === '' || $data['to'] === '/') ? BASE_DIR : fm_validate_path($data['to']);
     if ($destDir === false || !is_dir($destDir))
         json_error('Invalid destination.');
-    if (fm_is_own_directory($destDir))
-        json_error('Access denied.');
 
     $copied = [];
     foreach ($paths as $p) {
         $real = fm_validate_path($p);
         if ($real === false || !file_exists($real))
-            continue;
-        if (fm_is_own_directory($real))
             continue;
 
         $dest = $destDir . DIRECTORY_SEPARATOR . basename($real);

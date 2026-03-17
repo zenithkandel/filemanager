@@ -43,8 +43,31 @@ export function createOperationsModule(deps) {
         document.body.removeChild(a);
     }
 
+    function askUploadConflictMode(hasPotentialConflicts) {
+        if (!hasPotentialConflicts) return Promise.resolve('keep_both');
+
+        return new Promise((resolve) => {
+            showModal('File Already Exists', `
+                <p style="margin-bottom:8px;color:var(--text-secondary)">Some uploaded files may already exist in the destination.</p>
+                <p style="font-size:.9rem;color:var(--text-muted)">Choose how to handle conflicts:</p>
+            `, [
+                { label: 'Cancel', cls: '', action: () => { closeModal(); resolve(null); } },
+                { label: 'Skip Existing', cls: '', action: () => { closeModal(); resolve('skip'); } },
+                { label: 'Keep Both', cls: '', action: () => { closeModal(); resolve('keep_both'); } },
+                { label: 'Replace Existing', cls: 'btn-danger', action: () => { closeModal(); resolve('replace'); } },
+            ]);
+        });
+    }
+
     async function uploadFiles(files, path) {
         if (!files || files.length === 0) return;
+
+        const existingNames = new Set(
+            state.items.filter(i => !i.is_dir).map(i => i.name.toLowerCase())
+        );
+        const hasPotentialConflicts = [...files].some(f => existingNames.has((f.name || '').toLowerCase()));
+        const conflictMode = await askUploadConflictMode(hasPotentialConflicts);
+        if (!conflictMode) return;
 
         const progressEl = document.getElementById('upload-progress');
         const fillEl = document.getElementById('upload-fill');
@@ -56,6 +79,7 @@ export function createOperationsModule(deps) {
         const formData = new FormData();
         formData.append('path', path || state.path);
         formData.append('_csrf', state.csrf);
+        formData.append('conflict_mode', conflictMode);
         for (const f of files) {
             formData.append('files[]', f);
         }
@@ -88,6 +112,9 @@ export function createOperationsModule(deps) {
 
             if (result.errors && result.errors.length > 0) {
                 result.errors.forEach(e => toast(e, 'error'));
+            }
+            if (result.skipped && result.skipped.length > 0) {
+                toast(`${result.skipped.length} file${result.skipped.length > 1 ? 's' : ''} skipped (already exists).`, 'warning');
             }
             if (result.count > 0) {
                 toast(`${result.count} file${result.count > 1 ? 's' : ''} uploaded.`, 'success');
@@ -625,6 +652,9 @@ export function createOperationsModule(deps) {
     async function uploadFilesWithPaths(files, basePath) {
         if (!files || files.length === 0) return;
 
+        const conflictMode = await askUploadConflictMode(true);
+        if (!conflictMode) return;
+
         const progressEl = document.getElementById('upload-progress');
         const fillEl = document.getElementById('upload-fill');
         const textEl = document.getElementById('upload-text');
@@ -636,6 +666,7 @@ export function createOperationsModule(deps) {
         formData.append('path', basePath || state.path);
         formData.append('_csrf', state.csrf);
         formData.append('preserve_paths', '1');
+        formData.append('conflict_mode', conflictMode);
         for (const f of files) {
             formData.append('files[]', f);
             formData.append('relative_paths[]', f.webkitRelativePath || f.name);
@@ -665,6 +696,9 @@ export function createOperationsModule(deps) {
 
             if (result.errors && result.errors.length > 0) {
                 result.errors.forEach(e => toast(e, 'error'));
+            }
+            if (result.skipped && result.skipped.length > 0) {
+                toast(`${result.skipped.length} file${result.skipped.length > 1 ? 's' : ''} skipped (already exists).`, 'warning');
             }
             if (result.count > 0) {
                 toast(`${result.count} file${result.count > 1 ? 's' : ''} uploaded.`, 'success');

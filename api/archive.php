@@ -16,8 +16,6 @@ function api_extract(): void
     $real = fm_validate_path($data['path']);
     if ($real === false || !is_file($real))
         json_error('Archive not found.');
-    if (fm_is_own_directory($real))
-        json_error('Access denied.');
 
     $ext = fm_ext($real);
     if ($ext !== 'zip')
@@ -108,8 +106,6 @@ function api_compress(): void
         $real = fm_validate_path($p);
         if ($real === false || !file_exists($real))
             continue;
-        if (fm_is_own_directory($real))
-            continue;
 
         if (is_dir($real)) {
             $zip->addEmptyDir(basename($real));
@@ -149,8 +145,6 @@ function api_bulk_download(): void
     foreach ($paths as $p) {
         $real = fm_validate_path(trim($p));
         if ($real === false || !file_exists($real))
-            continue;
-        if (fm_is_own_directory($real))
             continue;
 
         if (is_dir($real)) {
