@@ -17,12 +17,12 @@ try {
         case 'session':
             $settings = loadSettings();
             jsonResponse([
-                'csrf'      => csrfToken(),
-                'role'      => getUserRole(),
-                'admin'     => isAdmin(),
+                'csrf' => csrfToken(),
+                'role' => getUserRole(),
+                'admin' => isAdmin(),
                 'admin_verified' => isAdminVerified(),
-                'settings'  => publicSettings($settings),
-                'base_dir'  => basename(getBaseDir()),
+                'settings' => publicSettings($settings),
+                'base_dir' => basename(getBaseDir()),
             ]);
 
         // ── Admin verification ──────────────────────────────────
@@ -129,7 +129,8 @@ try {
             foreach ($paths as $path) {
                 $real = virtualToReal($path);
                 ensureWithinBase($real);
-                if (!file_exists($real)) continue;
+                if (!file_exists($real))
+                    continue;
                 if (isProtectedFile($real) && !$settings['allow_edit_protected']) {
                     continue;
                 }
@@ -140,8 +141,8 @@ try {
                 $meta = [
                     'original_path' => $path,
                     'original_real' => $real,
-                    'deleted_at'    => date('c'),
-                    'is_dir'        => is_dir($real),
+                    'deleted_at' => date('c'),
+                    'is_dir' => is_dir($real),
                 ];
                 @file_put_contents($trashPath . '.meta', json_encode($meta, JSON_PRETTY_PRINT));
                 if (rename($real, $trashPath)) {
@@ -168,7 +169,8 @@ try {
                     }
                 }
                 $metaPath = $trashPath . '.meta';
-                if (file_exists($metaPath)) unlink($metaPath);
+                if (file_exists($metaPath))
+                    unlink($metaPath);
                 logEvent('file', 'permanent_delete', ['name' => $name]);
             }
             jsonResponse(['ok' => true]);
@@ -201,7 +203,8 @@ try {
             if (!rename($trashPath, $realDest)) {
                 jsonResponse(['error' => 'Restore failed'], 500);
             }
-            if (file_exists($metaPath)) unlink($metaPath);
+            if (file_exists($metaPath))
+                unlink($metaPath);
             logEvent('file', 'restore_from_trash', ['name' => $name, 'to' => $originalPath]);
             jsonResponse(['ok' => true, 'restored_to' => $originalPath]);
 
@@ -211,7 +214,8 @@ try {
             if (is_dir(FM_TRASH_DIR)) {
                 $scan = @scandir(FM_TRASH_DIR) ?: [];
                 foreach ($scan as $entry) {
-                    if ($entry[0] === '.' || str_ends_with($entry, '.meta') || $entry === '.htaccess') continue;
+                    if ($entry[0] === '.' || str_ends_with($entry, '.meta') || $entry === '.htaccess')
+                        continue;
                     $trashPath = FM_TRASH_DIR . DIRECTORY_SEPARATOR . $entry;
                     $meta = [];
                     $metaFile = $trashPath . '.meta';
@@ -219,11 +223,11 @@ try {
                         $meta = json_decode(file_get_contents($metaFile), true) ?: [];
                     }
                     $items[] = [
-                        'name'          => $entry,
+                        'name' => $entry,
                         'original_path' => $meta['original_path'] ?? 'unknown',
-                        'deleted_at'    => $meta['deleted_at'] ?? '',
-                        'is_dir'        => $meta['is_dir'] ?? is_dir($trashPath),
-                        'size'          => is_file($trashPath) ? filesize($trashPath) : 0,
+                        'deleted_at' => $meta['deleted_at'] ?? '',
+                        'is_dir' => $meta['is_dir'] ?? is_dir($trashPath),
+                        'size' => is_file($trashPath) ? filesize($trashPath) : 0,
                     ];
                 }
             }
@@ -238,7 +242,8 @@ try {
             if (is_dir(FM_TRASH_DIR)) {
                 $scan = @scandir(FM_TRASH_DIR) ?: [];
                 foreach ($scan as $entry) {
-                    if ($entry[0] === '.' && ($entry === '.' || $entry === '..' || $entry === '.htaccess')) continue;
+                    if ($entry[0] === '.' && ($entry === '.' || $entry === '..' || $entry === '.htaccess'))
+                        continue;
                     $p = FM_TRASH_DIR . DIRECTORY_SEPARATOR . $entry;
                     if (is_dir($p)) {
                         rrmdir($p);
@@ -264,7 +269,8 @@ try {
             foreach ($paths as $path) {
                 $srcReal = virtualToReal($path);
                 ensureWithinBase($srcReal);
-                if (!file_exists($srcReal)) continue;
+                if (!file_exists($srcReal))
+                    continue;
                 $targetPath = uniquePath($destReal, basename($srcReal));
                 rcopy($srcReal, $targetPath);
                 logEvent('file', 'copy', ['from' => $path, 'to' => $dest]);
@@ -286,7 +292,8 @@ try {
             foreach ($paths as $path) {
                 $srcReal = virtualToReal($path);
                 ensureWithinBase($srcReal);
-                if (!file_exists($srcReal)) continue;
+                if (!file_exists($srcReal))
+                    continue;
                 if (isProtectedFile($srcReal) && !$settings['allow_edit_protected']) {
                     continue;
                 }
@@ -365,11 +372,11 @@ try {
             $ext = strtolower(pathinfo($real, PATHINFO_EXTENSION));
             addRecent($path);
             jsonResponse([
-                'content'  => $content,
-                'path'     => $path,
-                'name'     => basename($real),
-                'ext'      => $ext,
-                'size'     => $size,
+                'content' => $content,
+                'path' => $path,
+                'name' => basename($real),
+                'ext' => $ext,
+                'size' => $size,
                 'writable' => is_writable($real),
                 'language' => extToLanguage($ext),
             ]);
@@ -415,7 +422,8 @@ try {
             foreach ($paths as $path) {
                 $real = virtualToReal($path);
                 ensureWithinBase($real);
-                if (!file_exists($real)) continue;
+                if (!file_exists($real))
+                    continue;
                 addPathToZip($zip, $real, basename($real));
             }
             $zip->close();
@@ -485,7 +493,7 @@ try {
             if (strlen($query) < 1) {
                 jsonResponse(['error' => 'Search query too short'], 400);
             }
-            $results = searchFiles($dir, $query, $type, (int)$sizeMin, (int)$sizeMax);
+            $results = searchFiles($dir, $query, $type, (int) $sizeMin, (int) $sizeMax);
             jsonResponse(['results' => $results]);
 
         // ── Favorites ───────────────────────────────────────────
@@ -524,10 +532,10 @@ try {
                 foreach ($raw as $line) {
                     $parts = explode("\t", $line, 4);
                     $lines[] = [
-                        'time'     => $parts[0] ?? '',
+                        'time' => $parts[0] ?? '',
                         'category' => $parts[1] ?? '',
-                        'action'   => $parts[2] ?? '',
-                        'data'     => isset($parts[3]) ? json_decode($parts[3], true) : null,
+                        'action' => $parts[2] ?? '',
+                        'data' => isset($parts[3]) ? json_decode($parts[3], true) : null,
                     ];
                 }
             }
@@ -562,13 +570,13 @@ try {
                 jsonResponse(['error' => 'Not found'], 404);
             }
             $info = [
-                'name'     => basename($real),
-                'path'     => $path,
-                'type'     => detectType($real),
-                'is_dir'   => is_dir($real),
-                'size'     => is_file($real) ? filesize($real) : dirSize($real),
+                'name' => basename($real),
+                'path' => $path,
+                'type' => detectType($real),
+                'is_dir' => is_dir($real),
+                'size' => is_file($real) ? filesize($real) : dirSize($real),
                 'modified' => filemtime($real),
-                'perms'    => substr(sprintf('%o', fileperms($real)), -4),
+                'perms' => substr(sprintf('%o', fileperms($real)), -4),
                 'writable' => is_writable($real),
                 'readable' => is_readable($real),
             ];
@@ -605,10 +613,10 @@ try {
     }
 } catch (Throwable $e) {
     logEvent('error', 'api_error', [
-        'action'  => $action,
+        'action' => $action,
         'message' => $e->getMessage(),
-        'file'    => $e->getFile(),
-        'line'    => $e->getLine(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
     ]);
     jsonResponse(['error' => 'Server error: ' . $e->getMessage()], 500);
 }
@@ -617,7 +625,8 @@ try {
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════
 
-function listDirectory(string $dir, string $sort = 'name', string $order = 'asc'): array {
+function listDirectory(string $dir, string $sort = 'name', string $order = 'asc'): array
+{
     $settings = loadSettings();
     $base = getBaseDir();
     $virtualDir = normalizeVirtualPath($dir);
@@ -633,21 +642,23 @@ function listDirectory(string $dir, string $sort = 'name', string $order = 'asc'
     $favs = loadFavorites();
 
     foreach ($entries as $entry) {
-        if ($entry === '.' || $entry === '..') continue;
-        if (!$settings['show_hidden'] && $entry[0] === '.') continue;
+        if ($entry === '.' || $entry === '..')
+            continue;
+        if (!$settings['show_hidden'] && $entry[0] === '.')
+            continue;
 
         $realPath = $realDir . DIRECTORY_SEPARATOR . $entry;
         $virtualPath = $virtualDir === '/' ? '/' . $entry : $virtualDir . '/' . $entry;
         $isDir = is_dir($realPath);
 
         $file = [
-            'name'     => $entry,
-            'path'     => $virtualPath,
-            'is_dir'   => $isDir,
-            'type'     => detectType($realPath),
-            'size'     => $isDir ? 0 : @filesize($realPath),
+            'name' => $entry,
+            'path' => $virtualPath,
+            'is_dir' => $isDir,
+            'type' => detectType($realPath),
+            'size' => $isDir ? 0 : @filesize($realPath),
             'modified' => @filemtime($realPath),
-            'ext'      => $isDir ? '' : strtolower(pathinfo($entry, PATHINFO_EXTENSION)),
+            'ext' => $isDir ? '' : strtolower(pathinfo($entry, PATHINFO_EXTENSION)),
             'favorite' => in_array($virtualPath, $favs),
         ];
         $files[] = $file;
@@ -679,13 +690,14 @@ function listDirectory(string $dir, string $sort = 'name', string $order = 'asc'
     });
 
     return [
-        'dir'   => $virtualDir,
+        'dir' => $virtualDir,
         'files' => $files,
         'parent' => $virtualDir === '/' ? null : dirname($virtualDir),
     ];
 }
 
-function searchFiles(string $dir, string $query, string $typeFilter, int $sizeMin, int $sizeMax, int $maxResults = 200): array {
+function searchFiles(string $dir, string $query, string $typeFilter, int $sizeMin, int $sizeMax, int $maxResults = 200): array
+{
     $base = getBaseDir();
     $settings = loadSettings();
     $realDir = virtualToReal($dir);
@@ -699,76 +711,90 @@ function searchFiles(string $dir, string $query, string $typeFilter, int $sizeMi
     );
 
     foreach ($iterator as $file) {
-        if (count($results) >= $maxResults) break;
+        if (count($results) >= $maxResults)
+            break;
 
         $realPath = $file->getPathname();
         $name = $file->getFilename();
 
         // Skip hidden files if setting says so
-        if (!$settings['show_hidden'] && $name[0] === '.') continue;
+        if (!$settings['show_hidden'] && $name[0] === '.')
+            continue;
 
         // Name match
-        if (strpos(strtolower($name), $query) === false) continue;
+        if (strpos(strtolower($name), $query) === false)
+            continue;
 
         // Ensure within base
         $normalized = str_replace('\\', '/', $realPath);
         $normalizedBase = str_replace('\\', '/', $base);
-        if (stripos($normalized, $normalizedBase) !== 0) continue;
+        if (stripos($normalized, $normalizedBase) !== 0)
+            continue;
 
         $type = detectType($realPath);
 
         // Type filter
-        if ($typeFilter && $type !== $typeFilter) continue;
+        if ($typeFilter && $type !== $typeFilter)
+            continue;
 
         // Size filter
         $size = $file->isFile() ? $file->getSize() : 0;
-        if ($sizeMin > 0 && $size < $sizeMin) continue;
-        if ($sizeMax > 0 && $size > $sizeMax) continue;
+        if ($sizeMin > 0 && $size < $sizeMin)
+            continue;
+        if ($sizeMax > 0 && $size > $sizeMax)
+            continue;
 
         $virtualPath = realToVirtual($realPath, $base);
 
         $results[] = [
-            'name'     => $name,
-            'path'     => $virtualPath,
-            'is_dir'   => $file->isDir(),
-            'type'     => $type,
-            'size'     => $size,
+            'name' => $name,
+            'path' => $virtualPath,
+            'is_dir' => $file->isDir(),
+            'type' => $type,
+            'size' => $size,
             'modified' => $file->getMTime(),
-            'ext'      => strtolower(pathinfo($name, PATHINFO_EXTENSION)),
+            'ext' => strtolower(pathinfo($name, PATHINFO_EXTENSION)),
         ];
     }
 
     return $results;
 }
 
-function rrmdir(string $dir): void {
+function rrmdir(string $dir): void
+{
     if (!is_dir($dir)) {
-        if (is_file($dir)) unlink($dir);
+        if (is_file($dir))
+            unlink($dir);
         return;
     }
     $entries = scandir($dir) ?: [];
     foreach ($entries as $entry) {
-        if ($entry === '.' || $entry === '..') continue;
+        if ($entry === '.' || $entry === '..')
+            continue;
         $path = $dir . DIRECTORY_SEPARATOR . $entry;
         is_dir($path) ? rrmdir($path) : unlink($path);
     }
     rmdir($dir);
 }
 
-function rcopy(string $src, string $dst): void {
+function rcopy(string $src, string $dst): void
+{
     if (is_file($src)) {
         copy($src, $dst);
         return;
     }
-    if (!is_dir($dst)) mkdir($dst, 0755, true);
+    if (!is_dir($dst))
+        mkdir($dst, 0755, true);
     $entries = scandir($src) ?: [];
     foreach ($entries as $entry) {
-        if ($entry === '.' || $entry === '..') continue;
+        if ($entry === '.' || $entry === '..')
+            continue;
         rcopy($src . DIRECTORY_SEPARATOR . $entry, $dst . DIRECTORY_SEPARATOR . $entry);
     }
 }
 
-function addPathToZip(ZipArchive $zip, string $realPath, string $zipPath): void {
+function addPathToZip(ZipArchive $zip, string $realPath, string $zipPath): void
+{
     if (is_file($realPath)) {
         $zip->addFile($realPath, $zipPath);
         return;
@@ -777,13 +803,15 @@ function addPathToZip(ZipArchive $zip, string $realPath, string $zipPath): void 
         $zip->addEmptyDir($zipPath);
         $entries = scandir($realPath) ?: [];
         foreach ($entries as $entry) {
-            if ($entry === '.' || $entry === '..') continue;
+            if ($entry === '.' || $entry === '..')
+                continue;
             addPathToZip($zip, $realPath . DIRECTORY_SEPARATOR . $entry, $zipPath . '/' . $entry);
         }
     }
 }
 
-function handleDownload(string $realPath): void {
+function handleDownload(string $realPath): void
+{
     $name = basename($realPath);
     $size = filesize($realPath);
     $mime = mimeType($realPath);
@@ -798,7 +826,8 @@ function handleDownload(string $realPath): void {
     exit;
 }
 
-function handleBatchDownload(array $paths): void {
+function handleBatchDownload(array $paths): void
+{
     $tmpZip = tempnam(sys_get_temp_dir(), 'fm_dl_');
     $zip = new ZipArchive();
     if ($zip->open($tmpZip, ZipArchive::CREATE) !== true) {
@@ -807,7 +836,8 @@ function handleBatchDownload(array $paths): void {
     foreach ($paths as $path) {
         $real = virtualToReal($path);
         ensureWithinBase($real);
-        if (!file_exists($real)) continue;
+        if (!file_exists($real))
+            continue;
         addPathToZip($zip, $real, basename($real));
     }
     $zip->close();
@@ -821,38 +851,72 @@ function handleBatchDownload(array $paths): void {
     exit;
 }
 
-function extToLanguage(string $ext): string {
+function extToLanguage(string $ext): string
+{
     $map = [
-        'php'=>'php','js'=>'javascript','ts'=>'typescript','jsx'=>'javascript',
-        'tsx'=>'typescript','css'=>'css','scss'=>'scss','less'=>'less',
-        'html'=>'html','htm'=>'html','xml'=>'xml','json'=>'json',
-        'yml'=>'yaml','yaml'=>'yaml','md'=>'markdown','sql'=>'sql',
-        'py'=>'python','rb'=>'ruby','java'=>'java','c'=>'c','cpp'=>'cpp',
-        'h'=>'c','hpp'=>'cpp','go'=>'go','rs'=>'rust','sh'=>'shell',
-        'bat'=>'bat','ps1'=>'powershell','ini'=>'ini','cfg'=>'ini',
-        'conf'=>'ini','toml'=>'ini','txt'=>'plaintext','log'=>'plaintext',
-        'csv'=>'plaintext','vue'=>'html','svelte'=>'html',
+        'php' => 'php',
+        'js' => 'javascript',
+        'ts' => 'typescript',
+        'jsx' => 'javascript',
+        'tsx' => 'typescript',
+        'css' => 'css',
+        'scss' => 'scss',
+        'less' => 'less',
+        'html' => 'html',
+        'htm' => 'html',
+        'xml' => 'xml',
+        'json' => 'json',
+        'yml' => 'yaml',
+        'yaml' => 'yaml',
+        'md' => 'markdown',
+        'sql' => 'sql',
+        'py' => 'python',
+        'rb' => 'ruby',
+        'java' => 'java',
+        'c' => 'c',
+        'cpp' => 'cpp',
+        'h' => 'c',
+        'hpp' => 'cpp',
+        'go' => 'go',
+        'rs' => 'rust',
+        'sh' => 'shell',
+        'bat' => 'bat',
+        'ps1' => 'powershell',
+        'ini' => 'ini',
+        'cfg' => 'ini',
+        'conf' => 'ini',
+        'toml' => 'ini',
+        'txt' => 'plaintext',
+        'log' => 'plaintext',
+        'csv' => 'plaintext',
+        'vue' => 'html',
+        'svelte' => 'html',
     ];
     return $map[$ext] ?? 'plaintext';
 }
 
 // ── Favorites ───────────────────────────────────────────────────
-function loadFavorites(): array {
-    if (!file_exists(FM_FAVORITES_FILE)) return [];
+function loadFavorites(): array
+{
+    if (!file_exists(FM_FAVORITES_FILE))
+        return [];
     $data = @json_decode(file_get_contents(FM_FAVORITES_FILE), true);
     return is_array($data) ? $data : [];
 }
 
-function saveFavorites(array $favs): void {
+function saveFavorites(array $favs): void
+{
     file_put_contents(FM_FAVORITES_FILE, json_encode(array_values($favs), JSON_PRETTY_PRINT));
 }
 
 // ── Recent files ────────────────────────────────────────────────
-function loadRecent(): array {
+function loadRecent(): array
+{
     return $_SESSION['fm_recent'] ?? [];
 }
 
-function addRecent(string $path): void {
+function addRecent(string $path): void
+{
     $recent = $_SESSION['fm_recent'] ?? [];
     // Remove if already exists
     $recent = array_values(array_filter($recent, fn($r) => $r['path'] !== $path));
@@ -868,7 +932,8 @@ function addRecent(string $path): void {
 }
 
 // ── Storage stats ───────────────────────────────────────────────
-function storageStats(string $dir): array {
+function storageStats(string $dir): array
+{
     $totalSize = 0;
     $fileCount = 0;
     $dirCount = 0;
@@ -882,7 +947,8 @@ function storageStats(string $dir): array {
     $limit = 50000; // Safety limit
     $count = 0;
     foreach ($iterator as $file) {
-        if (++$count > $limit) break;
+        if (++$count > $limit)
+            break;
         if ($file->isDir()) {
             $dirCount++;
         } else {
@@ -903,27 +969,29 @@ function storageStats(string $dir): array {
     $diskTotal = @disk_total_space($dir) ?: 0;
 
     return [
-        'total_size'     => $totalSize,
+        'total_size' => $totalSize,
         'total_size_fmt' => formatSize($totalSize),
-        'file_count'     => $fileCount,
-        'dir_count'      => $dirCount,
-        'types'          => $typeBreakdown,
-        'disk_free'      => $diskFree,
-        'disk_total'     => $diskTotal,
-        'disk_free_fmt'  => formatSize((int)$diskFree),
-        'disk_total_fmt' => formatSize((int)$diskTotal),
-        'truncated'      => $count > $limit,
+        'file_count' => $fileCount,
+        'dir_count' => $dirCount,
+        'types' => $typeBreakdown,
+        'disk_free' => $diskFree,
+        'disk_total' => $diskTotal,
+        'disk_free_fmt' => formatSize((int) $diskFree),
+        'disk_total_fmt' => formatSize((int) $diskTotal),
+        'truncated' => $count > $limit,
     ];
 }
 
-function dirSize(string $dir): int {
+function dirSize(string $dir): int
+{
     $size = 0;
     $iterator = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS)
     );
     $count = 0;
     foreach ($iterator as $file) {
-        if (++$count > 10000) break; // Safety limit
+        if (++$count > 10000)
+            break; // Safety limit
         if ($file->isFile()) {
             $size += $file->getSize();
         }
