@@ -24,26 +24,27 @@ define('FM_RECENT_MAX', 50);      // max recent files tracked
 
 // ── Default settings ────────────────────────────────────────────
 define('FM_DEFAULTS', [
-    'use_parent_dir'           => true,
-    'fixed_dir'                => '',
-    'show_hidden'              => false,
-    'allow_upload'             => true,
-    'allow_delete'             => true,
-    'allow_php_upload'         => false,
-    'allow_edit_protected'     => false,
-    'disable_path_restrictions'=> false,
-    'max_upload_size'          => 10 * 1024 * 1024, // 10MB
-    'allowed_extensions'       => ['txt','md','json','html','css','js','ts','xml','yml','yaml','ini','cfg','conf','log','csv','sql','php','py','rb','java','c','cpp','h','go','rs','sh','bat','jpg','jpeg','png','gif','webp','svg','ico','bmp','mp4','webm','ogg','mp3','wav','flac','zip','tar','gz','7z','rar','pdf','doc','docx','xls','xlsx','ppt','pptx'],
-    'blocked_extensions'       => ['exe','com','msi','scr','pif','cmd','vbs','vbe','wsf','wsh','ps1','dll'],
-    'theme'                    => 'light',
-    'density'                  => 'comfortable',
-    'editor'                   => 'monaco',
-    'password_user'            => '$2y$10$YhEbUMIRnGDBJjCGl5CyNOQ8m5FLVX9zCFzJqGx8FJmJY7eU0s4qG', // user123
-    'password_admin'           => '$2y$10$PCQFMBYmWvtAVxcczOItLuNrKFwZmVlNByPMl9oLkfuqFRHzlBQfW', // admin123
+    'use_parent_dir' => true,
+    'fixed_dir' => '',
+    'show_hidden' => false,
+    'allow_upload' => true,
+    'allow_delete' => true,
+    'allow_php_upload' => false,
+    'allow_edit_protected' => false,
+    'disable_path_restrictions' => false,
+    'max_upload_size' => 10 * 1024 * 1024, // 10MB
+    'allowed_extensions' => ['txt', 'md', 'json', 'html', 'css', 'js', 'ts', 'xml', 'yml', 'yaml', 'ini', 'cfg', 'conf', 'log', 'csv', 'sql', 'php', 'py', 'rb', 'java', 'c', 'cpp', 'h', 'go', 'rs', 'sh', 'bat', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'ico', 'bmp', 'mp4', 'webm', 'ogg', 'mp3', 'wav', 'flac', 'zip', 'tar', 'gz', '7z', 'rar', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'],
+    'blocked_extensions' => ['exe', 'com', 'msi', 'scr', 'pif', 'cmd', 'vbs', 'vbe', 'wsf', 'wsh', 'ps1', 'dll'],
+    'theme' => 'light',
+    'density' => 'comfortable',
+    'editor' => 'monaco',
+    'password_user' => '$2y$10$YhEbUMIRnGDBJjCGl5CyNOQ8m5FLVX9zCFzJqGx8FJmJY7eU0s4qG', // user123
+    'password_admin' => '$2y$10$PCQFMBYmWvtAVxcczOItLuNrKFwZmVlNByPMl9oLkfuqFRHzlBQfW', // admin123
 ]);
 
 // ── Ensure directories ──────────────────────────────────────────
-function ensureDirectories(): void {
+function ensureDirectories(): void
+{
     $dirs = [
         FM_ROOT . '/logs',
         FM_ROOT . '/assets/css',
@@ -66,7 +67,8 @@ function ensureDirectories(): void {
 ensureDirectories();
 
 // ── Settings ────────────────────────────────────────────────────
-function loadSettings(): array {
+function loadSettings(): array
+{
     $settings = FM_DEFAULTS;
     if (file_exists(FM_SETTINGS_FILE)) {
         $json = @json_decode(file_get_contents(FM_SETTINGS_FILE), true);
@@ -77,18 +79,20 @@ function loadSettings(): array {
     return $settings;
 }
 
-function saveSettings(array $settings): bool {
+function saveSettings(array $settings): bool
+{
     $json = json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     return file_put_contents(FM_SETTINGS_FILE, $json) !== false;
 }
 
 // ── Session management ──────────────────────────────────────────
-function initSecuritySession(): void {
+function initSecuritySession(): void
+{
     if (session_status() === PHP_SESSION_NONE) {
         session_name('fm_session');
         session_set_cookie_params([
-            'httponly'  => true,
-            'samesite'  => 'Strict',
+            'httponly' => true,
+            'samesite' => 'Strict',
         ]);
         session_start();
     }
@@ -106,14 +110,16 @@ function initSecuritySession(): void {
 initSecuritySession();
 
 // ── CSRF ────────────────────────────────────────────────────────
-function csrfToken(): string {
+function csrfToken(): string
+{
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
     return $_SESSION['csrf_token'];
 }
 
-function requireCsrf(): void {
+function requireCsrf(): void
+{
     $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? '';
     if (!hash_equals(csrfToken(), $token)) {
         jsonResponse(['error' => 'CSRF token mismatch'], 403);
@@ -121,7 +127,8 @@ function requireCsrf(): void {
 }
 
 // ── Logging ─────────────────────────────────────────────────────
-function logEvent(string $category, string $action, array $data = []): void {
+function logEvent(string $category, string $action, array $data = []): void
+{
     $line = implode("\t", [
         date('c'),
         $category,
@@ -132,19 +139,22 @@ function logEvent(string $category, string $action, array $data = []): void {
 }
 
 // ── Response helpers ────────────────────────────────────────────
-function jsonResponse(array $data, int $code = 200): never {
+function jsonResponse(array $data, int $code = 200): never
+{
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-function h(string $str): string {
+function h(string $str): string
+{
     return htmlspecialchars($str, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 }
 
 // ── Path security ───────────────────────────────────────────────
-function getBaseDir(): string {
+function getBaseDir(): string
+{
     $settings = loadSettings();
     if ($settings['use_parent_dir']) {
         $base = realpath(FM_ROOT . '/..');
@@ -157,7 +167,8 @@ function getBaseDir(): string {
     return $base;
 }
 
-function normalizeVirtualPath(string $path): string {
+function normalizeVirtualPath(string $path): string
+{
     $path = str_replace('\\', '/', $path);
     // Block path traversal
     if (strpos($path, '..') !== false) {
@@ -169,7 +180,8 @@ function normalizeVirtualPath(string $path): string {
     return $path === '' ? '/' : $path;
 }
 
-function ensureWithinBase(string $realPath, ?string $base = null): string {
+function ensureWithinBase(string $realPath, ?string $base = null): string
+{
     $base = $base ?? getBaseDir();
     $settings = loadSettings();
     // In restricted mode, enforce base directory
@@ -183,14 +195,16 @@ function ensureWithinBase(string $realPath, ?string $base = null): string {
     return $realPath;
 }
 
-function virtualToReal(string $virtualPath, ?string $base = null): string {
+function virtualToReal(string $virtualPath, ?string $base = null): string
+{
     $base = $base ?? getBaseDir();
     $virtual = normalizeVirtualPath($virtualPath);
     $real = $base . str_replace('/', DIRECTORY_SEPARATOR, $virtual);
     return $real;
 }
 
-function realToVirtual(string $realPath, ?string $base = null): string {
+function realToVirtual(string $realPath, ?string $base = null): string
+{
     $base = $base ?? getBaseDir();
     $normalizedReal = str_replace('\\', '/', $realPath);
     $normalizedBase = str_replace('\\', '/', $base);
@@ -199,7 +213,8 @@ function realToVirtual(string $realPath, ?string $base = null): string {
     return $virtual ?: '/';
 }
 
-function safeBasename(string $name): string {
+function safeBasename(string $name): string
+{
     $name = trim($name);
     $name = str_replace(['/', '\\', "\0"], '', $name);
     $name = preg_replace('/[<>:"|?*]/', '', $name); // Windows-unsafe chars
@@ -213,27 +228,32 @@ function safeBasename(string $name): string {
 }
 
 // ── File type detection ─────────────────────────────────────────
-function detectType(string $path): string {
-    if (is_dir($path)) return 'dir';
+function detectType(string $path): string
+{
+    if (is_dir($path))
+        return 'dir';
     $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
     $map = [
-        'image'   => ['jpg','jpeg','png','gif','webp','svg','ico','bmp','tiff'],
-        'video'   => ['mp4','webm','ogg','avi','mov','mkv'],
-        'audio'   => ['mp3','wav','flac','aac','ogg','wma','m4a'],
-        'archive' => ['zip','tar','gz','7z','rar','bz2','xz'],
-        'code'    => ['php','js','ts','jsx','tsx','css','scss','less','html','htm','xml','json','yml','yaml','md','sql','py','rb','java','c','cpp','h','hpp','go','rs','sh','bat','ps1','ini','cfg','conf','toml','vue','svelte'],
-        'pdf'     => ['pdf'],
-        'doc'     => ['doc','docx','xls','xlsx','ppt','pptx','odt','ods','odp'],
+        'image' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'ico', 'bmp', 'tiff'],
+        'video' => ['mp4', 'webm', 'ogg', 'avi', 'mov', 'mkv'],
+        'audio' => ['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma', 'm4a'],
+        'archive' => ['zip', 'tar', 'gz', '7z', 'rar', 'bz2', 'xz'],
+        'code' => ['php', 'js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'html', 'htm', 'xml', 'json', 'yml', 'yaml', 'md', 'sql', 'py', 'rb', 'java', 'c', 'cpp', 'h', 'hpp', 'go', 'rs', 'sh', 'bat', 'ps1', 'ini', 'cfg', 'conf', 'toml', 'vue', 'svelte'],
+        'pdf' => ['pdf'],
+        'doc' => ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp'],
     ];
     foreach ($map as $type => $exts) {
-        if (in_array($ext, $exts)) return $type;
+        if (in_array($ext, $exts))
+            return $type;
     }
     return 'file';
 }
 
-function isExtensionAllowed(string $filename, array $settings): bool {
+function isExtensionAllowed(string $filename, array $settings): bool
+{
     $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-    if ($ext === '') return true;
+    if ($ext === '')
+        return true;
     // Block dangerous extensions unless explicitly allowed
     if (in_array($ext, $settings['blocked_extensions'])) {
         return false;
@@ -245,7 +265,8 @@ function isExtensionAllowed(string $filename, array $settings): bool {
     return true;
 }
 
-function isProtectedFile(string $realPath): bool {
+function isProtectedFile(string $realPath): bool
+{
     $base = str_replace('\\', '/', FM_ROOT);
     $real = str_replace('\\', '/', $realPath);
     $protected = [
@@ -259,9 +280,11 @@ function isProtectedFile(string $realPath): bool {
     return in_array($real, $protected);
 }
 
-function uniquePath(string $dir, string $name): string {
+function uniquePath(string $dir, string $name): string
+{
     $target = $dir . DIRECTORY_SEPARATOR . $name;
-    if (!file_exists($target)) return $target;
+    if (!file_exists($target))
+        return $target;
 
     $ext = pathinfo($name, PATHINFO_EXTENSION);
     $base = pathinfo($name, PATHINFO_FILENAME);
@@ -275,25 +298,50 @@ function uniquePath(string $dir, string $name): string {
 }
 
 // ── Formatting helpers ──────────────────────────────────────────
-function formatSize(int $bytes): string {
-    if ($bytes < 1024) return $bytes . ' B';
-    if ($bytes < 1048576) return round($bytes / 1024, 1) . ' KB';
-    if ($bytes < 1073741824) return round($bytes / 1048576, 1) . ' MB';
+function formatSize(int $bytes): string
+{
+    if ($bytes < 1024)
+        return $bytes . ' B';
+    if ($bytes < 1048576)
+        return round($bytes / 1024, 1) . ' KB';
+    if ($bytes < 1073741824)
+        return round($bytes / 1048576, 1) . ' MB';
     return round($bytes / 1073741824, 2) . ' GB';
 }
 
-function mimeType(string $path): string {
+function mimeType(string $path): string
+{
     $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
     $mimes = [
-        'txt'=>'text/plain','html'=>'text/html','htm'=>'text/html','css'=>'text/css',
-        'js'=>'application/javascript','json'=>'application/json','xml'=>'application/xml',
-        'jpg'=>'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','gif'=>'image/gif',
-        'webp'=>'image/webp','svg'=>'image/svg+xml','ico'=>'image/x-icon','bmp'=>'image/bmp',
-        'mp4'=>'video/mp4','webm'=>'video/webm','ogg'=>'application/ogg',
-        'mp3'=>'audio/mpeg','wav'=>'audio/wav','flac'=>'audio/flac',
-        'pdf'=>'application/pdf','zip'=>'application/zip',
-        'md'=>'text/markdown','csv'=>'text/csv','sql'=>'text/plain',
-        'php'=>'text/plain','py'=>'text/plain','rb'=>'text/plain',
+        'txt' => 'text/plain',
+        'html' => 'text/html',
+        'htm' => 'text/html',
+        'css' => 'text/css',
+        'js' => 'application/javascript',
+        'json' => 'application/json',
+        'xml' => 'application/xml',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'gif' => 'image/gif',
+        'webp' => 'image/webp',
+        'svg' => 'image/svg+xml',
+        'ico' => 'image/x-icon',
+        'bmp' => 'image/bmp',
+        'mp4' => 'video/mp4',
+        'webm' => 'video/webm',
+        'ogg' => 'application/ogg',
+        'mp3' => 'audio/mpeg',
+        'wav' => 'audio/wav',
+        'flac' => 'audio/flac',
+        'pdf' => 'application/pdf',
+        'zip' => 'application/zip',
+        'md' => 'text/markdown',
+        'csv' => 'text/csv',
+        'sql' => 'text/plain',
+        'php' => 'text/plain',
+        'py' => 'text/plain',
+        'rb' => 'text/plain',
     ];
     return $mimes[$ext] ?? 'application/octet-stream';
 }
