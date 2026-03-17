@@ -214,7 +214,11 @@ export function createOperationsModule(deps) {
     }
 
     function getMonacoTheme() {
-        return document.documentElement.getAttribute('data-theme') === 'dark' ? 'vs-dark' : 'vs';
+        const html = document.documentElement;
+        const resolved = html.getAttribute('data-resolvedTheme');
+        const configured = html.getAttribute('data-theme');
+        const theme = resolved || configured || 'light';
+        return theme === 'dark' ? 'vs-dark' : 'vs';
     }
 
     function getLanguageForFile(filename) {
@@ -296,7 +300,10 @@ export function createOperationsModule(deps) {
                         monaco.editor.setTheme(getMonacoTheme());
                     }
                 });
-                themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+                themeObserver.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['data-theme', 'data-resolvedTheme']
+                });
 
                 // Clean up observer when modal closes
                 const overlay = document.getElementById('modal-overlay');
