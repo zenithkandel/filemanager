@@ -511,6 +511,8 @@
             navigate(item.path);
         } else if (item.is_image || item.is_video || item.is_audio) {
             previewFile(item);
+        } else if (item.ext === 'pdf') {
+            previewFile(item);
         } else if (item.editable) {
             editFile(item);
         } else {
@@ -1525,6 +1527,27 @@
                 return;
             }
 
+            // ? — show keyboard shortcuts
+            if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+                e.preventDefault();
+                showShortcutsHelp();
+                return;
+            }
+
+            // Ctrl+U — upload
+            if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+                e.preventDefault();
+                document.getElementById('file-input').click();
+                return;
+            }
+
+            // Ctrl+R — batch rename
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r' && state.selected.size > 1) {
+                e.preventDefault();
+                batchRename();
+                return;
+            }
+
             // Enter — open selected
             if (e.key === 'Enter' && state.selected.size === 1) {
                 e.preventDefault();
@@ -1655,6 +1678,255 @@
             return `${m}/${dd}/${Y} ${h12}:${i} ${ampm}`;
         }
         return `${Y}-${m}-${dd} ${H}:${i}`;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  KEYBOARD SHORTCUTS HELP
+    // ═══════════════════════════════════════════════════════════════════════
+
+    function showShortcutsHelp() {
+        const shortcuts = [
+            ['Ctrl+A', 'Select all items'],
+            ['Ctrl+C', 'Copy selected'],
+            ['Ctrl+X', 'Cut selected'],
+            ['Ctrl+V', 'Paste'],
+            ['Ctrl+F', 'Focus search'],
+            ['Ctrl+U', 'Upload files'],
+            ['Delete', 'Delete selected'],
+            ['F2', 'Rename selected'],
+            ['F5', 'Refresh'],
+            ['Enter', 'Open selected'],
+            ['Escape', 'Close / Deselect'],
+            ['Backspace', 'Go up one level'],
+            ['Shift+N', 'New folder'],
+            ['\u2191 / \u2193', 'Navigate items'],
+            ['?', 'Show this help'],
+        ];
+
+        const html = `<div style="display:grid;grid-template-columns:auto 1fr;gap:10px 20px;align-items:center">
+            ${shortcuts.map(([key, desc]) => `
+                <kbd style="background:var(--bg);padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);font-family:var(--font);font-size:.8rem;font-weight:600;text-align:center;min-width:60px">${escHtml(key)}</kbd>
+                <span style="font-size:.9rem;color:var(--text-secondary)">${escHtml(desc)}</span>
+            `).join('')}
+        </div>`;
+
+        showModal('Keyboard Shortcuts', html, [
+            { label: 'Close', cls: 'btn-primary', action: closeModal },
+        ]);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  FOLDER UPLOAD
+    // ═══════════════════════════════════════════════════════════════════════
+
+    function uploadFolder() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.webkitdirectory = true;
+        input.multiple = true;
+        input.addEventListener('change', () => {
+            if (input.files.length > 0) {
+                uploadFilesWithPaths(input.files, state.path);
+            }
+        });
+        input.click();
+    }
+
+    async function uploadFilesWithPaths(files, basePath) {
+        if (!files || files.length === 0) return;
+
+        const progressEl = document.getElementById('upload-progress');
+        const fillEl = document.getElementById('upload-fill');
+        const textEl = document.getElementById('upload-text');
+        progressEl.classList.remove('hidden');
+        fillEl.style.width = '0%';
+        textEl.textContent = `0 / ${files.length} files`;
+
+        const formData = new FormData();
+        formData.append('path', basePath || state.path);
+        formData.append('_csrf', state.csrf);
+        formData.append('preserve_paths', '1');
+        for (const f of files) {
+            formData.append('files[]', f);
+            formData.append('relative_paths[]', f.webkitRelativePath || f.name);
+        }
+
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `${API}?action=upload`, true);
+            xhr.setRequestHeader('X-CSRF-Token', state.csrf);
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    fillEl.style.width = pct + '%';
+                    textEl.textContent = `${pct}% (${files.length} files)`;
+                }
+            };
+
+            const result = await new Promise((resolve, reject) => {
+                xhr.onload = () => {
+                    try { resolve(JSON.parse(xhr.responseText)); }
+                    catch { reject(new Error('Upload response parse error')); }
+                };
+                xhr.onerror = () => reject(new Error('Upload failed'));
+                xhr.send(formData);
+            });
+
+            if (result.errors && result.errors.length > 0) {
+                result.errors.forEach(e => toast(e, 'error'));
+            }
+            if (result.count > 0) {
+                toast(`${result.count} file${result.count > 1 ? 's' : ''} uploaded.`, 'success');
+            }
+            navigate(state.path);
+        } catch (err) {
+            toast(err.message, 'error');
+        } finally {
+            setTimeout(() => progressEl.classList.add('hidden'), 2000);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  BATCH RENAME
+    // ═══════════════════════════════════════════════════════════════════════
+
+    async function batchRename() {
+        const paths = [...state.selected];
+        if (paths.length < 2) return;
+
+        const html = `
+            <p style="margin-bottom:16px;color:var(--text-secondary);font-size:.9rem">Rename ${paths.length} items using a pattern.</p>
+            <div class="form-group">
+                <label>Pattern</label>
+                <input type="text" id="batch-pattern" value="file_{n}" placeholder="file_{n}">
+                <div style="font-size:.78rem;color:var(--text-muted);margin-top:4px">
+                    Use <code>{n}</code> for sequence number, <code>{name}</code> for original name, <code>{ext}</code> for extension
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Start number</label>
+                <input type="number" id="batch-start" value="1" min="0" style="width:100px">
+            </div>
+            <div style="margin-top:12px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);font-size:.85rem">
+                <strong>Preview:</strong>
+                <div id="batch-preview" style="margin-top:8px;max-height:150px;overflow-y:auto"></div>
+            </div>
+        `;
+
+        showModal('Batch Rename', html, [
+            { label: 'Cancel', cls: '', action: closeModal },
+            {
+                label: 'Rename All', cls: 'btn-primary', action: async () => {
+                    const pattern = document.getElementById('batch-pattern').value.trim();
+                    const startNum = parseInt(document.getElementById('batch-start').value) || 1;
+                    if (!pattern) { toast('Pattern is required.', 'error'); return; }
+
+                    closeModal();
+                    let success = 0;
+                    for (let i = 0; i < paths.length; i++) {
+                        const item = state.items.find(it => it.path === paths[i]);
+                        if (!item) continue;
+
+                        const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.')) : '';
+                        const nameNoExt = item.name.includes('.') ? item.name.substring(0, item.name.lastIndexOf('.')) : item.name;
+                        const newName = pattern
+                            .replace(/\{n\}/g, String(startNum + i).padStart(String(startNum + paths.length).length, '0'))
+                            .replace(/\{name\}/g, nameNoExt)
+                            .replace(/\{ext\}/g, ext.replace('.', ''));
+                        const finalName = newName.includes('.') ? newName : newName + ext;
+
+                        try {
+                            await api('rename', { method: 'POST', body: { path: item.path, name: finalName } });
+                            success++;
+                        } catch { /* continue */ }
+                    }
+                    toast(`${success} of ${paths.length} items renamed.`, 'success');
+                    state.selected.clear();
+                    navigate(state.path);
+                }
+            },
+        ]);
+
+        // Live preview
+        function updatePreview() {
+            const pattern = document.getElementById('batch-pattern')?.value || 'file_{n}';
+            const startNum = parseInt(document.getElementById('batch-start')?.value) || 1;
+            const preview = document.getElementById('batch-preview');
+            if (!preview) return;
+
+            preview.innerHTML = paths.slice(0, 10).map((p, i) => {
+                const item = state.items.find(it => it.path === p);
+                if (!item) return '';
+                const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.')) : '';
+                const nameNoExt = item.name.includes('.') ? item.name.substring(0, item.name.lastIndexOf('.')) : item.name;
+                const newName = pattern
+                    .replace(/\{n\}/g, String(startNum + i).padStart(String(startNum + paths.length).length, '0'))
+                    .replace(/\{name\}/g, nameNoExt)
+                    .replace(/\{ext\}/g, ext.replace('.', ''));
+                const finalName = newName.includes('.') ? newName : newName + ext;
+                return `<div style="display:flex;gap:8px;padding:2px 0"><span style="color:var(--text-muted);text-decoration:line-through">${escHtml(item.name)}</span> <span>\u2192</span> <span style="color:var(--primary)">${escHtml(finalName)}</span></div>`;
+            }).join('') + (paths.length > 10 ? `<div style="color:var(--text-muted);padding-top:4px">...and ${paths.length - 10} more</div>` : '');
+        }
+
+        setTimeout(() => {
+            updatePreview();
+            document.getElementById('batch-pattern')?.addEventListener('input', updatePreview);
+            document.getElementById('batch-start')?.addEventListener('input', updatePreview);
+            document.getElementById('batch-pattern')?.focus();
+        }, 100);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  DRAG TO MOVE FILES
+    // ═══════════════════════════════════════════════════════════════════════
+
+    function enableFileDragMove(el, item) {
+        if (!item.is_dir) {
+            el.setAttribute('draggable', 'true');
+            el.addEventListener('dragstart', (e) => {
+                if (state.selected.size === 0 || !state.selected.has(item.path)) {
+                    selectOnly(item.path);
+                }
+                const paths = [...state.selected];
+                e.dataTransfer.setData('application/fm-paths', JSON.stringify(paths));
+                e.dataTransfer.effectAllowed = 'move';
+                el.classList.add('cut');
+            });
+            el.addEventListener('dragend', () => {
+                el.classList.remove('cut');
+            });
+        }
+
+        if (item.is_dir) {
+            el.addEventListener('dragover', (e) => {
+                const data = e.dataTransfer.types.includes('application/fm-paths');
+                if (data) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    el.style.outline = '2px solid var(--primary)';
+                    el.style.outlineOffset = '-2px';
+                }
+            });
+            el.addEventListener('dragleave', () => {
+                el.style.outline = '';
+                el.style.outlineOffset = '';
+            });
+            el.addEventListener('drop', async (e) => {
+                el.style.outline = '';
+                el.style.outlineOffset = '';
+                const raw = e.dataTransfer.getData('application/fm-paths');
+                if (!raw) return;
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                    const paths = JSON.parse(raw);
+                    await moveItems(paths, item.path);
+                } catch (err) {
+                    toast(err.message, 'error');
+                }
+            });
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
