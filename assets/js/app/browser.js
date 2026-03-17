@@ -1,3 +1,5 @@
+import { setSessionPref } from './state.js';
+
 export function createBrowserModule(deps) {
     const {
         state,
@@ -36,6 +38,7 @@ export function createBrowserModule(deps) {
                 params: { path: state.path, sort: state.sort, order: state.order }
             });
             state.items = data.items || [];
+            setSessionPref(state, 'path', state.path);
             renderFileList();
             renderBreadcrumb();
             updateStatusBar();
@@ -328,6 +331,7 @@ export function createBrowserModule(deps) {
 
     function setView(view) {
         state.view = view;
+        setSessionPref(state, 'view', view);
         updateViewToggle();
         renderFileList();
     }

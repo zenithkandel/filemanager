@@ -1,3 +1,5 @@
+import { getSessionPref, setSessionPref } from './state.js';
+
 export function createAccountModule(deps) {
     const {
         state,
@@ -31,7 +33,14 @@ export function createAccountModule(deps) {
             state.role = data.role;
             state.csrf = data.csrf;
             state.settings = data.settings || {};
-            state.view = state.settings.default_view || 'list';
+            state.view = getSessionPref(state, 'view', state.settings.default_view || 'list');
+            state.path = getSessionPref(state, 'path', '/');
+
+            const sessionTheme = getSessionPref(state, 'theme', '');
+            if (sessionTheme) {
+                document.documentElement.dataset.theme = sessionTheme;
+            }
+            resolveTheme();
 
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
@@ -239,6 +248,7 @@ export function createAccountModule(deps) {
                         const resp = await api('settings', { method: 'POST', body: newSettings });
                         state.settings = resp.settings;
                         document.documentElement.dataset.theme = state.settings.theme;
+                        setSessionPref(state, 'theme', state.settings.theme);
                         resolveTheme();
                         toast('Settings saved.', 'success');
                         closeModal();
@@ -292,7 +302,7 @@ export function createAccountModule(deps) {
         const newTheme = current === 'dark' ? 'light' : 'dark';
         html.dataset.theme = newTheme;
         html.dataset.resolvedTheme = newTheme;
-        localStorage.setItem('fm_theme', newTheme);
+        setSessionPref(state, 'theme', newTheme);
     }
 
     return {

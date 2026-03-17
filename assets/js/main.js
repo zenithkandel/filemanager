@@ -7,7 +7,7 @@ import { createAccountModule } from './app/account.js';
 import { createBrowserModule } from './app/browser.js';
 import { createEventsModule } from './app/events.js';
 import { createOperationsModule } from './app/operations.js';
-import { API, CODE_EXTS, DOC_EXTS, ICONS, state } from './app/state.js';
+import { API, CODE_EXTS, DOC_EXTS, ICONS, getSessionPref, state } from './app/state.js';
 import { escHtml, formatDate, humanSize } from './app/utils.js';
 import { closeModal, confirm_, hideContextMenu, promptInput, setLoading, showModal, toast } from './app/ui.js';
 
@@ -123,7 +123,15 @@ function init() {
         } catch {
             state.settings = {};
         }
-        state.view = state.settings.default_view || 'list';
+
+        state.view = getSessionPref(state, 'view', state.settings.default_view || 'list');
+        state.path = getSessionPref(state, 'path', '/');
+
+        const sessionTheme = getSessionPref(state, 'theme', '');
+        if (sessionTheme) {
+            document.documentElement.dataset.theme = sessionTheme;
+        }
+
         initApp();
     }
 

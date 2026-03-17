@@ -273,12 +273,6 @@ export function createEventsModule(deps) {
         });
 
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', resolveTheme);
-
-        const savedTheme = localStorage.getItem('fm_theme');
-        if (savedTheme) {
-            document.documentElement.dataset.theme = savedTheme;
-            resolveTheme();
-        }
     }
 
     return { bindEvents };

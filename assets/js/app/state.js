@@ -16,6 +16,25 @@ export const state = {
     loading: false,
 };
 
+export function getSessionPref(state, key, fallback = '') {
+    try {
+        const user = state.user || 'guest';
+        const value = sessionStorage.getItem(`fm:${user}:${key}`);
+        return value === null ? fallback : value;
+    } catch {
+        return fallback;
+    }
+}
+
+export function setSessionPref(state, key, value) {
+    try {
+        const user = state.user || 'guest';
+        sessionStorage.setItem(`fm:${user}:${key}`, String(value));
+    } catch {
+        // Ignore storage errors (private mode/quota/security restrictions)
+    }
+}
+
 export const ICONS = {
     folder: '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M2 9a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z" fill="currentColor"/></svg>',
     file: '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
