@@ -393,7 +393,7 @@ $settings = fm_load_settings();
     <!-- Hidden file input -->
     <input type="file" id="file-input" multiple style="display:none">
 
-    <script src="assets/js/main.js?v=<?= FM_VERSION ?>"></script>
+    <script type="module" src="assets/js/main.js?v=<?= FM_VERSION ?>"></script>
 </body>
 
 </html>
