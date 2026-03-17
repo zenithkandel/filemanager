@@ -1,1 +1,2 @@
 [2026-03-17 09:26:22] [INFO] [::1] [admin] LOGIN_OK — User: admin, Role: admin
+[2026-03-17 09:27:19] [WARN] [::1] [anonymous] LOGIN_FAIL — User: admin
