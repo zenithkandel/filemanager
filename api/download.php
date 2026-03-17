@@ -1,5 +1,8 @@
 <?php
-if (!defined('FM_ACCESS')) { http_response_code(403); exit('Forbidden'); }
+if (!defined('FM_ACCESS')) {
+    http_response_code(403);
+    exit('Forbidden');
+}
 
 function api_download(): void
 {
@@ -7,8 +10,6 @@ function api_download(): void
     $real = fm_validate_path($path);
     if ($real === false || !file_exists($real))
         json_error('File not found.');
-    if (fm_is_own_directory($real))
-        json_error('Access denied.');
 
     if (is_dir($real)) {
         // Download directory as zip

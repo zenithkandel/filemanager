@@ -15,9 +15,6 @@ function api_list(): void
     if ($realPath === false || !is_dir($realPath)) {
         json_error('Invalid directory.');
     }
-    if (fm_is_own_directory($realPath)) {
-        json_error('Access denied.');
-    }
 
     $items = [];
     $dirIter = @opendir($realPath);
@@ -34,11 +31,6 @@ function api_list(): void
         $full = $realPath . DIRECTORY_SEPARATOR . $entry;
         $isDir = is_dir($full);
 
-        // Skip filemanager directory from listing
-        $entryReal = realpath($full);
-        if ($entryReal !== false && fm_is_own_directory($entryReal))
-            continue;
-
         $stat = @stat($full);
         $ext = $isDir ? '' : fm_ext($entry);
 
@@ -50,7 +42,7 @@ function api_list(): void
             'modified' => $stat['mtime'] ?? 0,
             'perms' => substr(sprintf('%o', $stat['mode'] ?? 0), -4),
             'ext' => $ext,
-            'editable' => !$isDir && in_array($ext, EDITABLE_EXTENSIONS, true),
+            'editable' => !$isDir && fm_is_text_editable_file($full),
             'is_image' => in_array($ext, IMAGE_EXTENSIONS, true),
             'is_video' => in_array($ext, VIDEO_EXTENSIONS, true),
             'is_audio' => in_array($ext, AUDIO_EXTENSIONS, true),
@@ -124,10 +116,6 @@ function api_search(): void
                 break;
 
             $full = $dir . DIRECTORY_SEPARATOR . $entry;
-            $entryReal = realpath($full);
-            if ($entryReal !== false && fm_is_own_directory($entryReal))
-                continue;
-
             $isDir = is_dir($full);
 
             if (stripos($entry, $query) !== false) {
@@ -140,7 +128,7 @@ function api_search(): void
                     'size' => $isDir ? 0 : ($stat['size'] ?? 0),
                     'modified' => $stat['mtime'] ?? 0,
                     'ext' => $ext,
-                    'editable' => !$isDir && in_array($ext, EDITABLE_EXTENSIONS, true),
+                    'editable' => !$isDir && fm_is_text_editable_file($full),
                     'is_image' => in_array($ext, IMAGE_EXTENSIONS, true),
                     'is_video' => in_array($ext, VIDEO_EXTENSIONS, true),
                     'is_audio' => in_array($ext, AUDIO_EXTENSIONS, true),

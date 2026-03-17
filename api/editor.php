@@ -10,11 +10,8 @@ function api_read(): void
     $real = fm_validate_path($path);
     if ($real === false || !is_file($real))
         json_error('File not found.');
-    if (fm_is_own_directory($real))
-        json_error('Access denied.');
 
-    $ext = fm_ext($real);
-    if (!in_array($ext, EDITABLE_EXTENSIONS, true)) {
+    if (!fm_is_text_editable_file($real)) {
         json_error('This file type cannot be edited.');
     }
 
@@ -45,8 +42,6 @@ function api_save(): void
     $real = fm_validate_path($data['path']);
     if ($real === false || !is_file($real))
         json_error('File not found.');
-    if (fm_is_own_directory($real))
-        json_error('Access denied.');
     if (!is_writable($real))
         json_error('File is not writable.');
 
@@ -65,8 +60,6 @@ function api_preview(): void
     $real = fm_validate_path($path);
     if ($real === false || !is_file($real))
         json_error('File not found.');
-    if (fm_is_own_directory($real))
-        json_error('Access denied.');
 
     $mime = fm_mime($real);
 

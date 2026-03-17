@@ -338,6 +338,64 @@ function fm_ext(string $filename): string
 }
 
 /**
+ * Best-effort check whether a file is safe to open in the text editor.
+ * Uses extension and MIME hints first, then a small binary-content probe.
+ */
+function fm_is_text_editable_file(string $realPath): bool
+{
+    if (!is_file($realPath) || !is_readable($realPath)) {
+        return false;
+    }
+
+    $ext = fm_ext($realPath);
+
+    // Keep current allow-list behavior for known text/code extensions.
+    if ($ext !== '' && in_array($ext, EDITABLE_EXTENSIONS, true)) {
+        return true;
+    }
+
+    // Never try to edit obvious media/archive binaries.
+    if (
+        in_array($ext, IMAGE_EXTENSIONS, true)
+        || in_array($ext, VIDEO_EXTENSIONS, true)
+        || in_array($ext, AUDIO_EXTENSIONS, true)
+        || in_array($ext, ARCHIVE_EXTENSIONS, true)
+    ) {
+        return false;
+    }
+
+    $mime = fm_mime($realPath);
+    if (
+        str_starts_with($mime, 'text/')
+        || $mime === 'application/json'
+        || $mime === 'application/javascript'
+        || $mime === 'application/xml'
+        || str_contains($mime, 'x-sh')
+        || str_contains($mime, 'python')
+        || str_contains($mime, 'x-httpd-php')
+        || str_contains($mime, 'x-c')
+        || str_contains($mime, 'x-c++')
+        || str_contains($mime, 'x-java')
+    ) {
+        return true;
+    }
+
+    // Content probe for extensionless/unknown files: reject if NUL byte appears.
+    $fh = @fopen($realPath, 'rb');
+    if (!$fh) {
+        return false;
+    }
+    $chunk = fread($fh, 4096);
+    fclose($fh);
+
+    if ($chunk === false) {
+        return false;
+    }
+
+    return strpos($chunk, "\0") === false;
+}
+
+/**
  * Get relative path from BASE_DIR.
  */
 function fm_relative(string $realPath): string
