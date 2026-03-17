@@ -705,13 +705,18 @@ function searchFiles(string $dir, string $query, string $typeFilter, int $sizeMi
 
     $results = [];
     $query = strtolower($query);
+    $startTime = microtime(true);
     $iterator = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($realDir, RecursiveDirectoryIterator::SKIP_DOTS),
         RecursiveIteratorIterator::SELF_FIRST
     );
+    $iterator->setMaxDepth(15);
 
     foreach ($iterator as $file) {
         if (count($results) >= $maxResults)
+            break;
+        // Time limit: 10 seconds max
+        if (microtime(true) - $startTime > 10)
             break;
 
         $realPath = $file->getPathname();
@@ -945,9 +950,12 @@ function storageStats(string $dir): array
     );
 
     $limit = 50000; // Safety limit
+    $startTime = microtime(true);
     $count = 0;
     foreach ($iterator as $file) {
         if (++$count > $limit)
+            break;
+        if (microtime(true) - $startTime > 10)
             break;
         if ($file->isDir()) {
             $dirCount++;
