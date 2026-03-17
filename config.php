@@ -34,6 +34,10 @@ define('REAUTH_WINDOW', 300);       // 5 min — sensitive-action re-auth validi
 define('MAX_LOGIN_ATTEMPTS', 5);
 define('LOGIN_LOCKOUT_TIME', 900);    // 15 minutes
 
+// ─── Cloudflare Cache Purge ───────────────────────────────────────────────
+define('CLOUDFLARE_PURGE_URL', 'https://api.cloudflare.com/client/v4/zones/ab0b321755660e78deb54b58267533ea/purge_cache');
+define('CLOUDFLARE_API_TOKEN', getenv('CLOUDFLARE_API_TOKEN') ?: '');
+
 // ─── Uploads ────────────────────────────────────────────────────────────────
 define('MAX_UPLOAD_SIZE', 512 * 1024 * 1024); // 512 MB
 
