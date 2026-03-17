@@ -51,7 +51,12 @@ export async function api(action, opts = {}) {
         const data = await resp.json();
         if (!data.ok) {
             const errMsg = data.error || 'Unknown error';
-            if (resp.status === 449) {
+            const needsReauth = (
+                action !== 'reauth'
+                && (resp.status === 449 || errMsg === 'Re-authentication required.')
+            );
+
+            if (needsReauth) {
                 const pw = await promptReauth();
                 if (pw !== null) {
                     const reauthResp = await api('reauth', { method: 'POST', body: { password: pw } });
