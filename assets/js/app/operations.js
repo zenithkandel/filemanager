@@ -215,10 +215,10 @@ export function createOperationsModule(deps) {
 
     function getMonacoTheme() {
         const html = document.documentElement;
-        const resolved = html.dataset.resolvedTheme || html.getAttribute('data-resolved-theme');
-        const configured = html.getAttribute('data-theme');
-        const theme = resolved || configured || 'light';
-        return theme === 'dark' ? 'vs-dark' : 'vs';
+        const configured = html.getAttribute('data-theme') || 'auto';
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = configured === 'dark' || (configured === 'auto' && prefersDark);
+        return isDark ? 'vs-dark' : 'vs';
     }
 
     function getLanguageForFile(filename) {
@@ -289,6 +289,9 @@ export function createOperationsModule(deps) {
                     insertSpaces: true,
                     renderWhitespace: 'selection',
                 });
+
+                // Force the active theme after init to avoid Monaco defaulting to light.
+                monaco.editor.setTheme(getMonacoTheme());
 
                 editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
                     document.querySelector('.modal-footer .btn-primary')?.click();
