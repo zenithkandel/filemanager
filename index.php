@@ -160,6 +160,13 @@ $settings = fm_load_settings();
                             </svg>
                             Settings
                         </button>
+                        <button class="dropdown-item admin-only" data-action="purge-cache">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            Purge Caching
+                        </button>
                         <div class="dropdown-divider"></div>
                         <button class="dropdown-item" data-action="storage-info">
                             <svg viewBox="0 0 24 24" width="16" height="16">

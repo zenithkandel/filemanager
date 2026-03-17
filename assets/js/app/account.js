@@ -285,6 +285,20 @@ export function createAccountModule(deps) {
         } catch (err) { toast(err.message, 'error'); }
     }
 
+    async function purgeCaching() {
+        if (!await confirm_('Purge all Cloudflare cached content now?', 'Purge Caching')) return;
+        try {
+            const data = await api('purge_cache', { method: 'POST', body: {} });
+            if (data.id) {
+                toast(`Cache purged. Request ID: ${data.id}`, 'success');
+            } else {
+                toast('Cloudflare cache purged.', 'success');
+            }
+        } catch (err) {
+            toast(err.message, 'error');
+        }
+    }
+
     function resolveTheme() {
         const html = document.documentElement;
         const theme = html.dataset.theme || 'auto';
@@ -314,6 +328,7 @@ export function createAccountModule(deps) {
         showChangePassword,
         showSettings,
         showStorageInfo,
+        purgeCaching,
         resolveTheme,
         toggleTheme,
     };

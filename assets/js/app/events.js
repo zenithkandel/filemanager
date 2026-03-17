@@ -27,6 +27,7 @@ export function createEventsModule(deps) {
         showUsers,
         showSettings,
         showStorageInfo,
+        purgeCaching,
         showShortcutsHelp,
         toggleTheme,
         uploadFiles,
@@ -102,6 +103,7 @@ export function createEventsModule(deps) {
                     case 'trash': showTrash(); break;
                     case 'users': showUsers(); break;
                     case 'settings': showSettings(); break;
+                    case 'purge-cache': purgeCaching(); break;
                     case 'storage-info': showStorageInfo(); break;
                 }
             });

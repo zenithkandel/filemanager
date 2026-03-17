@@ -103,6 +103,7 @@ function init() {
         showUsers: account.showUsers,
         showSettings: account.showSettings,
         showStorageInfo: account.showStorageInfo,
+        purgeCaching: account.purgeCaching,
         showShortcutsHelp: operations.showShortcutsHelp,
         toggleTheme: account.toggleTheme,
         uploadFiles: operations.uploadFiles,

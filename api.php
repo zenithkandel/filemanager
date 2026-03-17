@@ -7,7 +7,7 @@
  * POST requests: login, logout, reauth, upload, mkdir, mkfile, rename, delete,
  *                move, copy, save, extract, compress, paste, bulk_delete,
  *                bulk_download, change_password, add_user, delete_user, settings,
- *                trash_restore, trash_empty, chmod
+ *                trash_restore, trash_empty, chmod, purge_cache
  */
 
 define('FM_ACCESS', true);
@@ -99,6 +99,7 @@ try {
         'add_user' => api_add_user(),
         'delete_user' => api_delete_user(),
         'settings' => api_settings(),
+        'purge_cache' => api_purge_cache(),
 
         default => json_error('Unknown action.', 400),
     };
