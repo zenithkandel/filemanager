@@ -36,7 +36,7 @@ define('LOGIN_LOCKOUT_TIME', 900);    // 15 minutes
 
 // ─── Cloudflare Cache Purge ───────────────────────────────────────────────
 define('CLOUDFLARE_PURGE_URL', 'https://api.cloudflare.com/client/v4/zones/ab0b321755660e78deb54b58267533ea/purge_cache');
-define('CLOUDFLARE_API_TOKEN', getenv('jUrevj84t3L7Izpc4NF00HxHvEYkK3M2kbRVOqmz') ?: '');
+define('CLOUDFLARE_API_TOKEN', getenv('CLOUDFLARE_API_TOKEN') ?: '');
 define('CLOUDFLARE_API_TOKEN_FILE', DATA_DIR . DIRECTORY_SEPARATOR . 'cloudflare_api_token.txt');
 
 function fm_cloudflare_api_token(): string
