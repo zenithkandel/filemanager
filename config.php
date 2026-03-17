@@ -38,8 +38,8 @@ define('FM_DEFAULTS', [
     'theme' => 'light',
     'density' => 'comfortable',
     'editor' => 'monaco',
-    'password_user' => '$2y$10$YhEbUMIRnGDBJjCGl5CyNOQ8m5FLVX9zCFzJqGx8FJmJY7eU0s4qG', // user123
-    'password_admin' => '$2y$10$PCQFMBYmWvtAVxcczOItLuNrKFwZmVlNByPMl9oLkfuqFRHzlBQfW', // admin123
+    'password_user' => '$2y$12$2u2uj9nZa0oSjojUH5bi5eYX0fqhd6186.6gK982n3RtxeD4o8XcK', // user123
+    'password_admin' => '$2y$12$0GIqNDQkSU7MQmrJahuW2u9nYgX5NmHjvNyClg5zelMfeaRzNKXcy', // admin123
 ]);
 
 // ── Ensure directories ──────────────────────────────────────────
