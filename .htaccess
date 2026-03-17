@@ -9,10 +9,20 @@
     </IfModule>
 </FilesMatch>
 
-# Deny access to data directory
+# Only allow direct access to index.php, api.php, and static assets
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Block access to data/, logs/, trash/ directories
     RewriteRule ^data/ - [F,L]
+    RewriteRule ^logs/ - [F,L]
+    RewriteRule ^trash/ - [F,L]
+
+    # Block direct access to PHP files except index.php and api.php
+    RewriteCond %{REQUEST_FILENAME} \.php$
+    RewriteCond %{REQUEST_URI} !^.*/index\.php$ [NC]
+    RewriteCond %{REQUEST_URI} !^.*/api\.php$ [NC]
+    RewriteRule .* - [F,L]
 </IfModule>
 
 # Prevent directory listing
@@ -21,8 +31,33 @@ Options -Indexes
 # Disable server-side includes
 Options -Includes
 
+# Disable CGI execution
+Options -ExecCGI
+
 # Set security headers (if not set by PHP)
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
+# Block common attack patterns
+<IfModule mod_rewrite.c>
+    # Block access to backup/config files
+    RewriteRule \.(bak|sql|old|orig|save|swp|swo)$ - [F,L]
+</IfModule>
+
+# Disable ETags for better security
+<IfModule mod_headers.c>
+    Header unset ETag
+</IfModule>
+FileETag None
+
+# Cache static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
 </IfModule>

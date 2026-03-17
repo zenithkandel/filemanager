@@ -96,6 +96,14 @@ $settings = fm_load_settings();
                 </div>
             </div>
             <div class="header-right">
+                <button id="shortcuts-btn" class="btn btn-icon" title="Keyboard shortcuts (?)">
+                    <svg viewBox="0 0 24 24" width="18" height="18">
+                        <rect x="2" y="6" width="20" height="12" rx="2" fill="none" stroke="currentColor"
+                            stroke-width="2" />
+                        <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" />
+                    </svg>
+                </button>
                 <button id="theme-toggle" class="btn btn-icon" title="Toggle theme">
                     <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18">
                         <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2" />
@@ -248,6 +256,16 @@ $settings = fm_load_settings();
                                 stroke-linecap="round" />
                         </svg>
                         <span class="btn-label">File</span>
+                    </button>
+                    <button class="btn btn-sm" id="btn-upload-folder" title="Upload folder">
+                        <svg viewBox="0 0 24 24" width="16" height="16">
+                            <path d="M4 15a3 3 0 0 1 3-3h10l4 4h0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3Z"
+                                fill="none" stroke="currentColor" stroke-width="2" opacity=".5" />
+                            <path d="M2 9a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z"
+                                fill="none" stroke="currentColor" stroke-width="2" />
+                            <path d="M12 18v-6M9 14l3-3 3 3" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
                     </button>
                     <button class="btn btn-sm" id="btn-paste" title="Paste" style="display:none">
                         <svg viewBox="0 0 24 24" width="16" height="16">

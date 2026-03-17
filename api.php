@@ -549,6 +549,8 @@ function api_upload(): void
     $files = $_FILES['files'];
     $uploaded = [];
     $errors = [];
+    $preservePaths = !empty($_POST['preserve_paths']);
+    $relativePaths = $_POST['relative_paths'] ?? [];
 
     // Normalize single file to array
     if (!is_array($files['name'])) {
@@ -558,6 +560,9 @@ function api_upload(): void
             'error' => [$files['error']],
             'size' => [$files['size']],
         ];
+        if (!is_array($relativePaths)) {
+            $relativePaths = [$relativePaths];
+        }
     }
 
     for ($i = 0; $i < count($files['name']); $i++) {
@@ -591,7 +596,45 @@ function api_upload(): void
             continue;
         }
 
-        $dest = $real . DIRECTORY_SEPARATOR . $name;
+        // Handle folder upload with relative paths
+        $destDir = $real;
+        if ($preservePaths && isset($relativePaths[$i]) && $relativePaths[$i]) {
+            $relPath = str_replace('\\', '/', $relativePaths[$i]);
+            $relPath = str_replace("\0", '', $relPath);
+            // Remove the filename from relative path to get subdirectory
+            $subDir = dirname($relPath);
+            if ($subDir !== '.' && $subDir !== '') {
+                // Sanitize each path component
+                $parts = explode('/', $subDir);
+                $safeParts = [];
+                foreach ($parts as $part) {
+                    $part = preg_replace('/[^\w\s\-\.\(\)\[\]]/', '_', $part);
+                    $part = trim($part);
+                    if ($part === '' || $part === '.' || $part === '..') continue;
+                    $safeParts[] = $part;
+                }
+                if (!empty($safeParts)) {
+                    $subPath = implode(DIRECTORY_SEPARATOR, $safeParts);
+                    $destDir = $real . DIRECTORY_SEPARATOR . $subPath;
+                    if (!is_dir($destDir)) {
+                        @mkdir($destDir, 0755, true);
+                    }
+                    // Verify the created directory is within BASE_DIR
+                    $destDirReal = realpath($destDir);
+                    if ($destDirReal === false || fm_is_own_directory($destDirReal)) {
+                        $errors[] = "$name: Invalid destination directory.";
+                        continue;
+                    }
+                    $base = rtrim(BASE_DIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+                    if ($destDirReal !== rtrim(BASE_DIR, DIRECTORY_SEPARATOR) && strpos($destDirReal . DIRECTORY_SEPARATOR, $base) !== 0) {
+                        $errors[] = "$name: Path traversal blocked.";
+                        continue;
+                    }
+                }
+            }
+        }
+
+        $dest = $destDir . DIRECTORY_SEPARATOR . $name;
 
         // If file exists, append numbered suffix
         if (file_exists($dest)) {
@@ -599,7 +642,7 @@ function api_upload(): void
             $ext = pathinfo($name, PATHINFO_EXTENSION);
             $n = 1;
             while (file_exists($dest)) {
-                $dest = $real . DIRECTORY_SEPARATOR . $base . " ($n)" . ($ext ? ".$ext" : '');
+                $dest = $destDir . DIRECTORY_SEPARATOR . $base . " ($n)" . ($ext ? ".$ext" : '');
                 $n++;
             }
             $name = basename($dest);

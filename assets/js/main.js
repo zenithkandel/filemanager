@@ -1320,6 +1320,7 @@
 
         // Toolbar buttons
         document.getElementById('btn-upload').addEventListener('click', () => document.getElementById('file-input').click());
+        document.getElementById('btn-upload-folder').addEventListener('click', uploadFolder);
         document.getElementById('btn-new-folder').addEventListener('click', createFolder);
         document.getElementById('btn-new-file').addEventListener('click', createFile);
         document.getElementById('btn-paste').addEventListener('click', clipPaste);
@@ -1383,6 +1384,9 @@
                 }
             });
         });
+
+        // Shortcuts help button
+        document.getElementById('shortcuts-btn').addEventListener('click', showShortcutsHelp);
 
         // Theme toggle
         document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
