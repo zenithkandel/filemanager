@@ -15,7 +15,8 @@ if (basename($_SERVER['SCRIPT_FILENAME'] ?? '') === basename(__FILE__)) {
 /**
  * Attempt login. Returns ['ok'=>true, 'role'=>...] or ['ok'=>false, 'error'=>...].
  */
-function fm_login(string $username, string $password): array {
+function fm_login(string $username, string $password): array
+{
     // Rate-limit check
     $lockout = fm_check_lockout();
     if ($lockout) {
@@ -34,12 +35,12 @@ function fm_login(string $username, string $password): array {
 
     // Success — regenerate session
     session_regenerate_id(true);
-    $_SESSION['fm_user']          = $username;
-    $_SESSION['fm_role']          = $users[$username]['role'] ?? 'user';
-    $_SESSION['fm_login_time']    = time();
-    $_SESSION['fm_created']       = time();
+    $_SESSION['fm_user'] = $username;
+    $_SESSION['fm_role'] = $users[$username]['role'] ?? 'user';
+    $_SESSION['fm_login_time'] = time();
+    $_SESSION['fm_created'] = time();
     $_SESSION['fm_last_activity'] = time();
-    $_SESSION['login_attempts']   = 0;
+    $_SESSION['login_attempts'] = 0;
 
     fm_log('LOGIN_OK', "User: $username, Role: {$_SESSION['fm_role']}");
     return ['ok' => true, 'role' => $_SESSION['fm_role']];
@@ -48,7 +49,8 @@ function fm_login(string $username, string $password): array {
 /**
  * Log the current user out.
  */
-function fm_logout(): void {
+function fm_logout(): void
+{
     $user = $_SESSION['fm_user'] ?? 'unknown';
     fm_log('LOGOUT', "User: $user");
 
@@ -63,28 +65,32 @@ function fm_logout(): void {
 /**
  * Is the current session authenticated?
  */
-function fm_is_logged_in(): bool {
+function fm_is_logged_in(): bool
+{
     return !empty($_SESSION['fm_user']);
 }
 
 /**
  * Get the current user's name.
  */
-function fm_current_user(): string {
+function fm_current_user(): string
+{
     return $_SESSION['fm_user'] ?? '';
 }
 
 /**
  * Get the current user's role.
  */
-function fm_current_role(): string {
+function fm_current_role(): string
+{
     return $_SESSION['fm_role'] ?? '';
 }
 
 /**
  * Is the current user an admin?
  */
-function fm_is_admin(): bool {
+function fm_is_admin(): bool
+{
     return ($_SESSION['fm_role'] ?? '') === 'admin';
 }
 
@@ -95,11 +101,13 @@ function fm_is_admin(): bool {
 /**
  * Re-authenticate the current user for a sensitive action.
  */
-function fm_reauth(string $password): bool {
-    if (!fm_is_logged_in()) return false;
+function fm_reauth(string $password): bool
+{
+    if (!fm_is_logged_in())
+        return false;
 
     $users = fm_load_users();
-    $user  = fm_current_user();
+    $user = fm_current_user();
 
     if (!isset($users[$user]) || !password_verify($password, $users[$user]['password'])) {
         fm_log('REAUTH_FAIL', "User: $user", 'WARN');
@@ -114,7 +122,8 @@ function fm_reauth(string $password): bool {
 /**
  * Has the user recently re-authenticated (within REAUTH_WINDOW)?
  */
-function fm_has_reauthed(): bool {
+function fm_has_reauthed(): bool
+{
     return isset($_SESSION['fm_reauth_time'])
         && (time() - $_SESSION['fm_reauth_time']) < REAUTH_WINDOW;
 }
@@ -126,13 +135,14 @@ function fm_has_reauthed(): bool {
 /**
  * Change the current user's password (requires old password verification).
  */
-function fm_change_password(string $oldPassword, string $newPassword): array {
+function fm_change_password(string $oldPassword, string $newPassword): array
+{
     if (!fm_is_logged_in()) {
         return ['ok' => false, 'error' => 'Not authenticated.'];
     }
 
     $username = fm_current_user();
-    $users    = fm_load_users();
+    $users = fm_load_users();
 
     if (!isset($users[$username])) {
         return ['ok' => false, 'error' => 'User not found.'];
@@ -158,7 +168,8 @@ function fm_change_password(string $oldPassword, string $newPassword): array {
 //  RATE LIMITING
 // ═══════════════════════════════════════════════════════════════════════════
 
-function fm_record_failed_attempt(): void {
+function fm_record_failed_attempt(): void
+{
     if (!isset($_SESSION['login_attempts'])) {
         $_SESSION['login_attempts'] = 0;
     }
@@ -169,7 +180,8 @@ function fm_record_failed_attempt(): void {
 /**
  * Return seconds remaining in lockout, or 0 if not locked out.
  */
-function fm_check_lockout(): int {
+function fm_check_lockout(): int
+{
     $attempts = $_SESSION['login_attempts'] ?? 0;
     $lastTime = $_SESSION['login_last_attempt'] ?? 0;
 
@@ -191,8 +203,9 @@ function fm_check_lockout(): int {
 /**
  * List all users (admin only, never exposes passwords).
  */
-function fm_list_users(): array {
-    $users  = fm_load_users();
+function fm_list_users(): array
+{
+    $users = fm_load_users();
     $result = [];
     foreach ($users as $name => $data) {
         $result[] = ['username' => $name, 'role' => $data['role'] ?? 'user'];
@@ -203,7 +216,8 @@ function fm_list_users(): array {
 /**
  * Add a new user (admin only).
  */
-function fm_add_user(string $username, string $password, string $role = 'user'): array {
+function fm_add_user(string $username, string $password, string $role = 'user'): array
+{
     $username = trim($username);
     if (!preg_match('/^[a-zA-Z0-9_]{2,32}$/', $username)) {
         return ['ok' => false, 'error' => 'Username must be 2-32 alphanumeric/underscore characters.'];
@@ -222,7 +236,7 @@ function fm_add_user(string $username, string $password, string $role = 'user'):
 
     $users[$username] = [
         'password' => password_hash($password, PASSWORD_BCRYPT),
-        'role'     => $role,
+        'role' => $role,
     ];
     fm_save_users($users);
     fm_log('USER_ADDED', "User: $username, Role: $role");
@@ -233,7 +247,8 @@ function fm_add_user(string $username, string $password, string $role = 'user'):
 /**
  * Delete a user (admin only, cannot delete self).
  */
-function fm_delete_user(string $username): array {
+function fm_delete_user(string $username): array
+{
     if ($username === fm_current_user()) {
         return ['ok' => false, 'error' => 'Cannot delete yourself.'];
     }

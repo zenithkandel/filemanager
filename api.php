@@ -41,49 +41,49 @@ if ($method === 'POST' && $action !== 'login') {
 try {
     match ($action) {
         // Auth
-        'login'            => api_login(),
-        'logout'           => api_logout(),
-        'reauth'           => api_reauth(),
-        'change_password'  => api_change_password(),
+        'login' => api_login(),
+        'logout' => api_logout(),
+        'reauth' => api_reauth(),
+        'change_password' => api_change_password(),
 
         // Browse
-        'list'             => api_list(),
-        'search'           => api_search(),
-        'info'             => api_info(),
-        'storage'          => api_storage(),
+        'list' => api_list(),
+        'search' => api_search(),
+        'info' => api_info(),
+        'storage' => api_storage(),
 
         // File ops
-        'download'         => api_download(),
-        'upload'           => api_upload(),
-        'mkdir'            => api_mkdir(),
-        'mkfile'           => api_mkfile(),
-        'rename'           => api_rename(),
-        'delete'           => api_delete(),
-        'move'             => api_move(),
-        'copy'             => api_copy(),
-        'read'             => api_read(),
-        'save'             => api_save(),
-        'preview'          => api_preview(),
-        'chmod'            => api_chmod(),
+        'download' => api_download(),
+        'upload' => api_upload(),
+        'mkdir' => api_mkdir(),
+        'mkfile' => api_mkfile(),
+        'rename' => api_rename(),
+        'delete' => api_delete(),
+        'move' => api_move(),
+        'copy' => api_copy(),
+        'read' => api_read(),
+        'save' => api_save(),
+        'preview' => api_preview(),
+        'chmod' => api_chmod(),
 
         // Bulk
-        'bulk_delete'      => api_bulk_delete(),
-        'bulk_download'    => api_bulk_download(),
+        'bulk_delete' => api_bulk_delete(),
+        'bulk_download' => api_bulk_download(),
 
         // Archives
-        'extract'          => api_extract(),
-        'compress'         => api_compress(),
+        'extract' => api_extract(),
+        'compress' => api_compress(),
 
         // Trash
-        'trash_list'       => api_trash_list(),
-        'trash_restore'    => api_trash_restore(),
-        'trash_empty'      => api_trash_empty(),
+        'trash_list' => api_trash_list(),
+        'trash_restore' => api_trash_restore(),
+        'trash_empty' => api_trash_empty(),
 
         // Admin
-        'users'            => api_users(),
-        'add_user'         => api_add_user(),
-        'delete_user'      => api_delete_user(),
-        'settings'         => api_settings(),
+        'users' => api_users(),
+        'add_user' => api_add_user(),
+        'delete_user' => api_delete_user(),
+        'settings' => api_settings(),
 
         default => json_error('Unknown action.', 400),
     };
@@ -96,42 +96,49 @@ try {
 //  JSON HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
-function json_ok(array $data = []): never {
+function json_ok(array $data = []): never
+{
     echo json_encode(array_merge(['ok' => true], $data), JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-function json_error(string $msg, int $code = 400): never {
+function json_error(string $msg, int $code = 400): never
+{
     http_response_code($code);
     echo json_encode(['ok' => false, 'error' => $msg], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-function require_post(): void {
+function require_post(): void
+{
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         json_error('POST required.', 405);
     }
 }
 
-function require_admin(): void {
+function require_admin(): void
+{
     if (!fm_is_admin()) {
         json_error('Admin privileges required.', 403);
     }
 }
 
-function require_reauth(): void {
+function require_reauth(): void
+{
     if (!fm_has_reauthed()) {
         json_error('Re-authentication required.', 449);
     }
 }
 
-function post_json(): array {
+function post_json(): array
+{
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true);
     return is_array($data) ? $data : [];
 }
 
-function need(array $data, string ...$keys): void {
+function need(array $data, string ...$keys): void
+{
     foreach ($keys as $k) {
         if (!isset($data[$k]) || (is_string($data[$k]) && trim($data[$k]) === '')) {
             json_error("Missing required field: $k");
@@ -143,7 +150,8 @@ function need(array $data, string ...$keys): void {
 //  AUTH ENDPOINTS
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_login(): void {
+function api_login(): void
+{
     require_post();
     $data = post_json();
     need($data, 'username', 'password');
@@ -152,20 +160,22 @@ function api_login(): void {
         json_error($result['error'], 401);
     }
     json_ok([
-        'user'  => fm_current_user(),
-        'role'  => fm_current_role(),
-        'csrf'  => fm_csrf_token(),
+        'user' => fm_current_user(),
+        'role' => fm_current_role(),
+        'csrf' => fm_csrf_token(),
         'settings' => fm_load_settings(),
     ]);
 }
 
-function api_logout(): void {
+function api_logout(): void
+{
     require_post();
     fm_logout();
     json_ok();
 }
 
-function api_reauth(): void {
+function api_reauth(): void
+{
     require_post();
     $data = post_json();
     need($data, 'password');
@@ -175,7 +185,8 @@ function api_reauth(): void {
     json_ok();
 }
 
-function api_change_password(): void {
+function api_change_password(): void
+{
     require_post();
     $data = post_json();
     need($data, 'old_password', 'new_password');
@@ -190,10 +201,11 @@ function api_change_password(): void {
 //  BROWSE / LIST
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_list(): void {
-    $path     = $_GET['path'] ?? '';
-    $sort     = $_GET['sort'] ?? 'name';
-    $order    = ($_GET['order'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
+function api_list(): void
+{
+    $path = $_GET['path'] ?? '';
+    $sort = $_GET['sort'] ?? 'name';
+    $order = ($_GET['order'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
     $settings = fm_load_settings();
 
     $realPath = ($path === '' || $path === '/') ? BASE_DIR : fm_validate_path($path);
@@ -204,34 +216,37 @@ function api_list(): void {
         json_error('Access denied.');
     }
 
-    $items   = [];
+    $items = [];
     $dirIter = @opendir($realPath);
     if ($dirIter === false) {
         json_error('Cannot read directory.');
     }
 
     while (($entry = readdir($dirIter)) !== false) {
-        if ($entry === '.' || $entry === '..') continue;
-        if (!$settings['show_hidden'] && $entry[0] === '.') continue;
+        if ($entry === '.' || $entry === '..')
+            continue;
+        if (!$settings['show_hidden'] && $entry[0] === '.')
+            continue;
 
         $full = $realPath . DIRECTORY_SEPARATOR . $entry;
         $isDir = is_dir($full);
 
         // Skip filemanager directory from listing
         $entryReal = realpath($full);
-        if ($entryReal !== false && fm_is_own_directory($entryReal)) continue;
+        if ($entryReal !== false && fm_is_own_directory($entryReal))
+            continue;
 
         $stat = @stat($full);
-        $ext  = $isDir ? '' : fm_ext($entry);
+        $ext = $isDir ? '' : fm_ext($entry);
 
         $items[] = [
-            'name'     => $entry,
-            'path'     => fm_relative($full),
-            'is_dir'   => $isDir,
-            'size'     => $isDir ? 0 : ($stat['size'] ?? 0),
+            'name' => $entry,
+            'path' => fm_relative($full),
+            'is_dir' => $isDir,
+            'size' => $isDir ? 0 : ($stat['size'] ?? 0),
             'modified' => $stat['mtime'] ?? 0,
-            'perms'    => substr(sprintf('%o', $stat['mode'] ?? 0), -4),
-            'ext'      => $ext,
+            'perms' => substr(sprintf('%o', $stat['mode'] ?? 0), -4),
+            'ext' => $ext,
             'editable' => !$isDir && in_array($ext, EDITABLE_EXTENSIONS, true),
             'is_image' => in_array($ext, IMAGE_EXTENSIONS, true),
             'is_video' => in_array($ext, VIDEO_EXTENSIONS, true),
@@ -244,22 +259,23 @@ function api_list(): void {
     // Sort: directories first, then by chosen field
     usort($items, function ($a, $b) use ($sort, $order) {
         // Dirs always first
-        if ($a['is_dir'] !== $b['is_dir']) return $b['is_dir'] <=> $a['is_dir'];
+        if ($a['is_dir'] !== $b['is_dir'])
+            return $b['is_dir'] <=> $a['is_dir'];
 
         $cmp = match ($sort) {
-            'size'     => $a['size'] <=> $b['size'],
+            'size' => $a['size'] <=> $b['size'],
             'modified' => $a['modified'] <=> $b['modified'],
-            'ext'      => strcasecmp($a['ext'], $b['ext']),
-            default    => strnatcasecmp($a['name'], $b['name']),
+            'ext' => strcasecmp($a['ext'], $b['ext']),
+            default => strnatcasecmp($a['name'], $b['name']),
         };
         return $order === 'desc' ? -$cmp : $cmp;
     });
 
     json_ok([
-        'path'      => $path ?: '/',
+        'path' => $path ?: '/',
         'real_path' => fm_relative($realPath),
-        'items'     => $items,
-        'parent'    => $path ? dirname($path) : null,
+        'items' => $items,
+        'parent' => $path ? dirname($path) : null,
     ]);
 }
 
@@ -267,9 +283,10 @@ function api_list(): void {
 //  SEARCH
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_search(): void {
+function api_search(): void
+{
     $query = trim($_GET['query'] ?? '');
-    $path  = $_GET['path'] ?? '';
+    $path = $_GET['path'] ?? '';
 
     if (strlen($query) < 1) {
         json_error('Search query too short.');
@@ -280,7 +297,7 @@ function api_search(): void {
         json_error('Invalid directory.');
     }
 
-    $results  = [];
+    $results = [];
     $maxResults = 200;
     $maxDepth = 10;
     $queryLower = strtolower($query);
@@ -288,37 +305,43 @@ function api_search(): void {
     $startTime = microtime(true);
     $timeLimit = 5.0; // seconds
 
-    $search = function (string $dir, int $depth) use (
-        &$search, &$results, $maxResults, $maxDepth, $queryLower, $settings, $startTime, $timeLimit
-    ) {
-        if (count($results) >= $maxResults || $depth > $maxDepth) return;
-        if ((microtime(true) - $startTime) > $timeLimit) return;
+    $search = function (string $dir, int $depth) use (&$search, &$results, $maxResults, $maxDepth, $queryLower, $settings, $startTime, $timeLimit) {
+        if (count($results) >= $maxResults || $depth > $maxDepth)
+            return;
+        if ((microtime(true) - $startTime) > $timeLimit)
+            return;
 
         $dh = @opendir($dir);
-        if (!$dh) return;
+        if (!$dh)
+            return;
 
         while (($entry = readdir($dh)) !== false) {
-            if ($entry === '.' || $entry === '..') continue;
-            if (!$settings['show_hidden'] && $entry[0] === '.') continue;
-            if (count($results) >= $maxResults) break;
-            if ((microtime(true) - $startTime) > $timeLimit) break;
+            if ($entry === '.' || $entry === '..')
+                continue;
+            if (!$settings['show_hidden'] && $entry[0] === '.')
+                continue;
+            if (count($results) >= $maxResults)
+                break;
+            if ((microtime(true) - $startTime) > $timeLimit)
+                break;
 
             $full = $dir . DIRECTORY_SEPARATOR . $entry;
             $entryReal = realpath($full);
-            if ($entryReal !== false && fm_is_own_directory($entryReal)) continue;
+            if ($entryReal !== false && fm_is_own_directory($entryReal))
+                continue;
 
             $isDir = is_dir($full);
 
             if (stripos($entry, $queryLower) !== false) {
                 $stat = @stat($full);
-                $ext  = $isDir ? '' : fm_ext($entry);
+                $ext = $isDir ? '' : fm_ext($entry);
                 $results[] = [
-                    'name'     => $entry,
-                    'path'     => fm_relative($full),
-                    'is_dir'   => $isDir,
-                    'size'     => $isDir ? 0 : ($stat['size'] ?? 0),
+                    'name' => $entry,
+                    'path' => fm_relative($full),
+                    'is_dir' => $isDir,
+                    'size' => $isDir ? 0 : ($stat['size'] ?? 0),
                     'modified' => $stat['mtime'] ?? 0,
-                    'ext'      => $ext,
+                    'ext' => $ext,
                     'editable' => !$isDir && in_array($ext, EDITABLE_EXTENSIONS, true),
                     'is_image' => in_array($ext, IMAGE_EXTENSIONS, true),
                     'is_video' => in_array($ext, VIDEO_EXTENSIONS, true),
@@ -343,29 +366,32 @@ function api_search(): void {
 //  FILE INFO
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_info(): void {
+function api_info(): void
+{
     $path = $_GET['path'] ?? '';
     $real = fm_validate_path($path);
-    if ($real === false || !file_exists($real)) json_error('File not found.');
-    if (fm_is_own_directory($real)) json_error('Access denied.');
+    if ($real === false || !file_exists($real))
+        json_error('File not found.');
+    if (fm_is_own_directory($real))
+        json_error('Access denied.');
 
-    $stat  = @stat($real);
+    $stat = @stat($real);
     $isDir = is_dir($real);
-    $ext   = $isDir ? '' : fm_ext($real);
+    $ext = $isDir ? '' : fm_ext($real);
 
     $info = [
-        'name'      => basename($real),
-        'path'      => fm_relative($real),
-        'is_dir'    => $isDir,
-        'size'      => $isDir ? fm_dir_size($real) : ($stat['size'] ?? 0),
-        'size_human'=> fm_human_size($isDir ? fm_dir_size($real) : ($stat['size'] ?? 0)),
-        'modified'  => date('Y-m-d H:i:s', $stat['mtime'] ?? 0),
-        'created'   => date('Y-m-d H:i:s', $stat['ctime'] ?? 0),
-        'perms'     => substr(sprintf('%o', $stat['mode'] ?? 0), -4),
-        'mime'      => $isDir ? 'directory' : fm_mime($real),
-        'ext'       => $ext,
-        'writable'  => is_writable($real),
-        'readable'  => is_readable($real),
+        'name' => basename($real),
+        'path' => fm_relative($real),
+        'is_dir' => $isDir,
+        'size' => $isDir ? fm_dir_size($real) : ($stat['size'] ?? 0),
+        'size_human' => fm_human_size($isDir ? fm_dir_size($real) : ($stat['size'] ?? 0)),
+        'modified' => date('Y-m-d H:i:s', $stat['mtime'] ?? 0),
+        'created' => date('Y-m-d H:i:s', $stat['ctime'] ?? 0),
+        'perms' => substr(sprintf('%o', $stat['mode'] ?? 0), -4),
+        'mime' => $isDir ? 'directory' : fm_mime($real),
+        'ext' => $ext,
+        'writable' => is_writable($real),
+        'readable' => is_readable($real),
     ];
 
     if ($isDir) {
@@ -375,7 +401,8 @@ function api_info(): void {
     json_ok($info);
 }
 
-function fm_dir_size(string $dir): int {
+function fm_dir_size(string $dir): int
+{
     $size = 0;
     $iter = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
@@ -383,32 +410,37 @@ function fm_dir_size(string $dir): int {
     );
     $iter->setMaxDepth(20);
     foreach ($iter as $file) {
-        if ($file->isFile()) $size += $file->getSize();
+        if ($file->isFile())
+            $size += $file->getSize();
     }
     return $size;
 }
 
-function fm_dir_count(string $dir): int {
+function fm_dir_count(string $dir): int
+{
     $count = 0;
     $dh = @opendir($dir);
-    if (!$dh) return 0;
+    if (!$dh)
+        return 0;
     while (($e = readdir($dh)) !== false) {
-        if ($e !== '.' && $e !== '..') $count++;
+        if ($e !== '.' && $e !== '..')
+            $count++;
     }
     closedir($dh);
     return $count;
 }
 
-function api_storage(): void {
+function api_storage(): void
+{
     $total = @disk_total_space(BASE_DIR) ?: 0;
-    $free  = @disk_free_space(BASE_DIR) ?: 0;
+    $free = @disk_free_space(BASE_DIR) ?: 0;
     json_ok([
-        'total'      => $total,
-        'free'       => $free,
-        'used'       => $total - $free,
+        'total' => $total,
+        'free' => $free,
+        'used' => $total - $free,
         'total_human' => fm_human_size($total),
-        'free_human'  => fm_human_size($free),
-        'used_human'  => fm_human_size($total - $free),
+        'free_human' => fm_human_size($free),
+        'used_human' => fm_human_size($total - $free),
     ]);
 }
 
@@ -416,15 +448,19 @@ function api_storage(): void {
 //  DOWNLOAD
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_download(): void {
+function api_download(): void
+{
     $path = $_GET['path'] ?? '';
     $real = fm_validate_path($path);
-    if ($real === false || !file_exists($real)) json_error('File not found.');
-    if (fm_is_own_directory($real)) json_error('Access denied.');
+    if ($real === false || !file_exists($real))
+        json_error('File not found.');
+    if (fm_is_own_directory($real))
+        json_error('Access denied.');
 
     if (is_dir($real)) {
         // Download directory as zip
-        if (!class_exists('ZipArchive')) json_error('Zip extension not available.');
+        if (!class_exists('ZipArchive'))
+            json_error('Zip extension not available.');
 
         $zipName = basename($real) . '.zip';
         $tmpFile = tempnam(sys_get_temp_dir(), 'fm_');
@@ -447,7 +483,8 @@ function api_download(): void {
     exit;
 }
 
-function fm_send_file(string $filePath, string $fileName, string $mime): void {
+function fm_send_file(string $filePath, string $fileName, string $mime): void
+{
     $size = filesize($filePath);
     header('Content-Type: ' . $mime);
     header('Content-Disposition: attachment; filename="' . rawurlencode($fileName) . '"');
@@ -456,7 +493,8 @@ function fm_send_file(string $filePath, string $fileName, string $mime): void {
     header('Content-Transfer-Encoding: binary');
 
     // Clear any previous output buffer
-    while (ob_get_level()) ob_end_clean();
+    while (ob_get_level())
+        ob_end_clean();
 
     $fh = fopen($filePath, 'rb');
     if ($fh) {
@@ -468,14 +506,17 @@ function fm_send_file(string $filePath, string $fileName, string $mime): void {
     }
 }
 
-function fm_add_dir_to_zip(ZipArchive $zip, string $dir, string $prefix): void {
+function fm_add_dir_to_zip(ZipArchive $zip, string $dir, string $prefix): void
+{
     $dh = @opendir($dir);
-    if (!$dh) return;
+    if (!$dh)
+        return;
 
     while (($entry = readdir($dh)) !== false) {
-        if ($entry === '.' || $entry === '..') continue;
+        if ($entry === '.' || $entry === '..')
+            continue;
         $full = $dir . DIRECTORY_SEPARATOR . $entry;
-        $rel  = $prefix . '/' . $entry;
+        $rel = $prefix . '/' . $entry;
 
         if (is_dir($full)) {
             $zip->addEmptyDir($rel);
@@ -491,35 +532,39 @@ function fm_add_dir_to_zip(ZipArchive $zip, string $dir, string $prefix): void {
 //  UPLOAD
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_upload(): void {
+function api_upload(): void
+{
     require_post();
 
     $path = $_POST['path'] ?? '';
     $real = ($path === '' || $path === '/') ? BASE_DIR : fm_validate_path($path);
-    if ($real === false || !is_dir($real)) json_error('Invalid upload directory.');
-    if (fm_is_own_directory($real)) json_error('Access denied.');
+    if ($real === false || !is_dir($real))
+        json_error('Invalid upload directory.');
+    if (fm_is_own_directory($real))
+        json_error('Access denied.');
 
-    if (empty($_FILES['files'])) json_error('No files uploaded.');
+    if (empty($_FILES['files']))
+        json_error('No files uploaded.');
 
-    $files  = $_FILES['files'];
+    $files = $_FILES['files'];
     $uploaded = [];
-    $errors   = [];
+    $errors = [];
 
     // Normalize single file to array
     if (!is_array($files['name'])) {
         $files = [
-            'name'     => [$files['name']],
+            'name' => [$files['name']],
             'tmp_name' => [$files['tmp_name']],
-            'error'    => [$files['error']],
-            'size'     => [$files['size']],
+            'error' => [$files['error']],
+            'size' => [$files['size']],
         ];
     }
 
     for ($i = 0; $i < count($files['name']); $i++) {
-        $name  = basename($files['name'][$i]);
-        $tmp   = $files['tmp_name'][$i];
+        $name = basename($files['name'][$i]);
+        $tmp = $files['tmp_name'][$i];
         $error = $files['error'][$i];
-        $size  = $files['size'][$i];
+        $size = $files['size'][$i];
 
         if ($error !== UPLOAD_ERR_OK) {
             $errors[] = "$name: Upload error ($error).";
@@ -551,7 +596,7 @@ function api_upload(): void {
         // If file exists, append numbered suffix
         if (file_exists($dest)) {
             $base = pathinfo($name, PATHINFO_FILENAME);
-            $ext  = pathinfo($name, PATHINFO_EXTENSION);
+            $ext = pathinfo($name, PATHINFO_EXTENSION);
             $n = 1;
             while (file_exists($dest)) {
                 $dest = $real . DIRECTORY_SEPARATOR . $base . " ($n)" . ($ext ? ".$ext" : '');
@@ -571,8 +616,8 @@ function api_upload(): void {
 
     json_ok([
         'uploaded' => $uploaded,
-        'errors'   => $errors,
-        'count'    => count($uploaded),
+        'errors' => $errors,
+        'count' => count($uploaded),
     ]);
 }
 
@@ -580,46 +625,59 @@ function api_upload(): void {
 //  CREATE DIRECTORY / FILE
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_mkdir(): void {
+function api_mkdir(): void
+{
     require_post();
     $data = post_json();
     need($data, 'path', 'name');
 
     $name = basename(trim($data['name']));
-    if ($name === '' || $name === '.' || $name === '..') json_error('Invalid name.');
+    if ($name === '' || $name === '.' || $name === '..')
+        json_error('Invalid name.');
 
     $parentPath = $data['path'] ?: '/';
     $parent = ($parentPath === '' || $parentPath === '/') ? BASE_DIR : fm_validate_path($parentPath);
-    if ($parent === false || !is_dir($parent)) json_error('Invalid parent directory.');
-    if (fm_is_own_directory($parent)) json_error('Access denied.');
+    if ($parent === false || !is_dir($parent))
+        json_error('Invalid parent directory.');
+    if (fm_is_own_directory($parent))
+        json_error('Access denied.');
 
     $full = $parent . DIRECTORY_SEPARATOR . $name;
-    if (file_exists($full)) json_error('Already exists.');
+    if (file_exists($full))
+        json_error('Already exists.');
 
-    if (!@mkdir($full, 0755)) json_error('Failed to create directory.');
+    if (!@mkdir($full, 0755))
+        json_error('Failed to create directory.');
 
     fm_log('MKDIR', fm_relative($full));
     json_ok(['name' => $name, 'path' => fm_relative($full)]);
 }
 
-function api_mkfile(): void {
+function api_mkfile(): void
+{
     require_post();
     $data = post_json();
     need($data, 'path', 'name');
 
     $name = basename(trim($data['name']));
-    if ($name === '' || $name === '.' || $name === '..') json_error('Invalid name.');
-    if (fm_is_blocked_ext($name)) json_error('File type is blocked.');
+    if ($name === '' || $name === '.' || $name === '..')
+        json_error('Invalid name.');
+    if (fm_is_blocked_ext($name))
+        json_error('File type is blocked.');
 
     $parentPath = $data['path'] ?: '/';
     $parent = ($parentPath === '' || $parentPath === '/') ? BASE_DIR : fm_validate_path($parentPath);
-    if ($parent === false || !is_dir($parent)) json_error('Invalid parent directory.');
-    if (fm_is_own_directory($parent)) json_error('Access denied.');
+    if ($parent === false || !is_dir($parent))
+        json_error('Invalid parent directory.');
+    if (fm_is_own_directory($parent))
+        json_error('Access denied.');
 
     $full = $parent . DIRECTORY_SEPARATOR . $name;
-    if (file_exists($full)) json_error('Already exists.');
+    if (file_exists($full))
+        json_error('Already exists.');
 
-    if (file_put_contents($full, '') === false) json_error('Failed to create file.');
+    if (file_put_contents($full, '') === false)
+        json_error('Failed to create file.');
 
     fm_log('MKFILE', fm_relative($full));
     json_ok(['name' => $name, 'path' => fm_relative($full)]);
@@ -629,17 +687,21 @@ function api_mkfile(): void {
 //  RENAME
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_rename(): void {
+function api_rename(): void
+{
     require_post();
     $data = post_json();
     need($data, 'path', 'name');
 
     $real = fm_validate_path($data['path']);
-    if ($real === false || !file_exists($real)) json_error('Not found.');
-    if (fm_is_own_directory($real)) json_error('Access denied.');
+    if ($real === false || !file_exists($real))
+        json_error('Not found.');
+    if (fm_is_own_directory($real))
+        json_error('Access denied.');
 
     $newName = basename(trim($data['name']));
-    if ($newName === '' || $newName === '.' || $newName === '..') json_error('Invalid name.');
+    if ($newName === '' || $newName === '.' || $newName === '..')
+        json_error('Invalid name.');
 
     // Block renaming files to dangerous extensions
     if (!is_dir($real) && fm_is_blocked_ext($newName)) {
@@ -647,9 +709,11 @@ function api_rename(): void {
     }
 
     $newPath = dirname($real) . DIRECTORY_SEPARATOR . $newName;
-    if (file_exists($newPath) && $real !== $newPath) json_error('Name already taken.');
+    if (file_exists($newPath) && $real !== $newPath)
+        json_error('Name already taken.');
 
-    if (!@rename($real, $newPath)) json_error('Rename failed.');
+    if (!@rename($real, $newPath))
+        json_error('Rename failed.');
 
     fm_log('RENAME', fm_relative($real) . ' → ' . $newName);
     json_ok(['name' => $newName, 'path' => fm_relative($newPath)]);
@@ -659,15 +723,19 @@ function api_rename(): void {
 //  DELETE
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_delete(): void {
+function api_delete(): void
+{
     require_post();
     $data = post_json();
     need($data, 'path');
 
     $real = fm_validate_path($data['path']);
-    if ($real === false || !file_exists($real)) json_error('Not found.');
-    if (fm_is_own_directory($real)) json_error('Access denied.');
-    if ($real === BASE_DIR) json_error('Cannot delete root.');
+    if ($real === false || !file_exists($real))
+        json_error('Not found.');
+    if (fm_is_own_directory($real))
+        json_error('Access denied.');
+    if ($real === BASE_DIR)
+        json_error('Cannot delete root.');
 
     $settings = fm_load_settings();
 
@@ -677,14 +745,15 @@ function api_delete(): void {
         $trashMeta = TRASH_DIR . DIRECTORY_SEPARATOR . $trashName . '.meta';
         $trashDest = TRASH_DIR . DIRECTORY_SEPARATOR . $trashName;
 
-        if (!is_dir(TRASH_DIR)) @mkdir(TRASH_DIR, 0700, true);
+        if (!is_dir(TRASH_DIR))
+            @mkdir(TRASH_DIR, 0700, true);
 
         // Save original path in meta file
         file_put_contents($trashMeta, json_encode([
             'original' => fm_relative($real),
-            'deleted'  => date('Y-m-d H:i:s'),
-            'user'     => fm_current_user(),
-            'is_dir'   => is_dir($real),
+            'deleted' => date('Y-m-d H:i:s'),
+            'user' => fm_current_user(),
+            'is_dir' => is_dir($real),
         ]));
 
         if (!@rename($real, $trashDest)) {
@@ -711,25 +780,30 @@ function api_delete(): void {
     json_ok();
 }
 
-function fm_delete_recursive(string $dir): void {
+function fm_delete_recursive(string $dir): void
+{
     $items = @scandir($dir);
-    if (!$items) return;
+    if (!$items)
+        return;
     foreach ($items as $item) {
-        if ($item === '.' || $item === '..') continue;
+        if ($item === '.' || $item === '..')
+            continue;
         $path = $dir . DIRECTORY_SEPARATOR . $item;
         is_dir($path) ? fm_delete_recursive($path) : @unlink($path);
     }
     @rmdir($dir);
 }
 
-function api_bulk_delete(): void {
+function api_bulk_delete(): void
+{
     require_post();
     $data = post_json();
-    if (empty($data['paths']) || !is_array($data['paths'])) json_error('No paths specified.');
+    if (empty($data['paths']) || !is_array($data['paths']))
+        json_error('No paths specified.');
 
     $settings = fm_load_settings();
     $deleted = [];
-    $errors  = [];
+    $errors = [];
 
     foreach ($data['paths'] as $p) {
         $real = fm_validate_path($p);
@@ -743,15 +817,16 @@ function api_bulk_delete(): void {
         }
 
         if ($settings['enable_trash'] && empty($data['permanent'])) {
-            $trashName = time() . '_' . rand(1000,9999) . '_' . basename($real);
+            $trashName = time() . '_' . rand(1000, 9999) . '_' . basename($real);
             $trashDest = TRASH_DIR . DIRECTORY_SEPARATOR . $trashName;
             $trashMeta = TRASH_DIR . DIRECTORY_SEPARATOR . $trashName . '.meta';
-            if (!is_dir(TRASH_DIR)) @mkdir(TRASH_DIR, 0700, true);
+            if (!is_dir(TRASH_DIR))
+                @mkdir(TRASH_DIR, 0700, true);
             file_put_contents($trashMeta, json_encode([
                 'original' => fm_relative($real),
-                'deleted'  => date('Y-m-d H:i:s'),
-                'user'     => fm_current_user(),
-                'is_dir'   => is_dir($real),
+                'deleted' => date('Y-m-d H:i:s'),
+                'user' => fm_current_user(),
+                'is_dir' => is_dir($real),
             ]));
             if (@rename($real, $trashDest)) {
                 $deleted[] = $p;
@@ -777,26 +852,31 @@ function api_bulk_delete(): void {
 //  MOVE / COPY
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_move(): void {
+function api_move(): void
+{
     require_post();
     $data = post_json();
     need($data, 'from', 'to');
 
     $paths = is_array($data['from']) ? $data['from'] : [$data['from']];
     $destDir = ($data['to'] === '' || $data['to'] === '/') ? BASE_DIR : fm_validate_path($data['to']);
-    if ($destDir === false || !is_dir($destDir)) json_error('Invalid destination.');
-    if (fm_is_own_directory($destDir)) json_error('Access denied.');
+    if ($destDir === false || !is_dir($destDir))
+        json_error('Invalid destination.');
+    if (fm_is_own_directory($destDir))
+        json_error('Access denied.');
 
     $moved = [];
     foreach ($paths as $p) {
         $real = fm_validate_path($p);
-        if ($real === false || !file_exists($real)) continue;
-        if (fm_is_own_directory($real) || $real === BASE_DIR) continue;
+        if ($real === false || !file_exists($real))
+            continue;
+        if (fm_is_own_directory($real) || $real === BASE_DIR)
+            continue;
 
         $dest = $destDir . DIRECTORY_SEPARATOR . basename($real);
         if (file_exists($dest)) {
             $base = pathinfo(basename($real), PATHINFO_FILENAME);
-            $ext  = pathinfo(basename($real), PATHINFO_EXTENSION);
+            $ext = pathinfo(basename($real), PATHINFO_EXTENSION);
             $n = 1;
             while (file_exists($dest)) {
                 $dest = $destDir . DIRECTORY_SEPARATOR . $base . " ($n)" . ($ext ? ".$ext" : '');
@@ -812,26 +892,31 @@ function api_move(): void {
     json_ok(['moved' => $moved]);
 }
 
-function api_copy(): void {
+function api_copy(): void
+{
     require_post();
     $data = post_json();
     need($data, 'from', 'to');
 
     $paths = is_array($data['from']) ? $data['from'] : [$data['from']];
     $destDir = ($data['to'] === '' || $data['to'] === '/') ? BASE_DIR : fm_validate_path($data['to']);
-    if ($destDir === false || !is_dir($destDir)) json_error('Invalid destination.');
-    if (fm_is_own_directory($destDir)) json_error('Access denied.');
+    if ($destDir === false || !is_dir($destDir))
+        json_error('Invalid destination.');
+    if (fm_is_own_directory($destDir))
+        json_error('Access denied.');
 
     $copied = [];
     foreach ($paths as $p) {
         $real = fm_validate_path($p);
-        if ($real === false || !file_exists($real)) continue;
-        if (fm_is_own_directory($real)) continue;
+        if ($real === false || !file_exists($real))
+            continue;
+        if (fm_is_own_directory($real))
+            continue;
 
         $dest = $destDir . DIRECTORY_SEPARATOR . basename($real);
         if (file_exists($dest)) {
             $base = pathinfo(basename($real), PATHINFO_FILENAME);
-            $ext  = pathinfo(basename($real), PATHINFO_EXTENSION);
+            $ext = pathinfo(basename($real), PATHINFO_EXTENSION);
             $n = 1;
             while (file_exists($dest)) {
                 $dest = $destDir . DIRECTORY_SEPARATOR . $base . " - Copy ($n)" . ($ext ? ".$ext" : '');
@@ -851,12 +936,15 @@ function api_copy(): void {
     json_ok(['copied' => $copied]);
 }
 
-function fm_copy_recursive(string $src, string $dst): void {
+function fm_copy_recursive(string $src, string $dst): void
+{
     @mkdir($dst, 0755);
     $items = @scandir($src);
-    if (!$items) return;
+    if (!$items)
+        return;
     foreach ($items as $item) {
-        if ($item === '.' || $item === '..') continue;
+        if ($item === '.' || $item === '..')
+            continue;
         $s = $src . DIRECTORY_SEPARATOR . $item;
         $d = $dst . DIRECTORY_SEPARATOR . $item;
         is_dir($s) ? fm_copy_recursive($s, $d) : @copy($s, $d);
@@ -867,11 +955,14 @@ function fm_copy_recursive(string $src, string $dst): void {
 //  READ / SAVE (editor)
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_read(): void {
+function api_read(): void
+{
     $path = $_GET['path'] ?? '';
     $real = fm_validate_path($path);
-    if ($real === false || !is_file($real)) json_error('File not found.');
-    if (fm_is_own_directory($real)) json_error('Access denied.');
+    if ($real === false || !is_file($real))
+        json_error('File not found.');
+    if (fm_is_own_directory($real))
+        json_error('Access denied.');
 
     $ext = fm_ext($real);
     if (!in_array($ext, EDITABLE_EXTENSIONS, true)) {
@@ -884,26 +975,31 @@ function api_read(): void {
     }
 
     $content = @file_get_contents($real);
-    if ($content === false) json_error('Cannot read file.');
+    if ($content === false)
+        json_error('Cannot read file.');
 
     json_ok([
-        'content'  => $content,
-        'name'     => basename($real),
-        'path'     => fm_relative($real),
-        'size'     => filesize($real),
+        'content' => $content,
+        'name' => basename($real),
+        'path' => fm_relative($real),
+        'size' => filesize($real),
         'writable' => is_writable($real),
     ]);
 }
 
-function api_save(): void {
+function api_save(): void
+{
     require_post();
     $data = post_json();
     need($data, 'path');
 
     $real = fm_validate_path($data['path']);
-    if ($real === false || !is_file($real)) json_error('File not found.');
-    if (fm_is_own_directory($real)) json_error('Access denied.');
-    if (!is_writable($real)) json_error('File is not writable.');
+    if ($real === false || !is_file($real))
+        json_error('File not found.');
+    if (fm_is_own_directory($real))
+        json_error('Access denied.');
+    if (!is_writable($real))
+        json_error('File is not writable.');
 
     $content = $data['content'] ?? '';
     if (file_put_contents($real, $content, LOCK_EX) === false) {
@@ -918,16 +1014,20 @@ function api_save(): void {
 //  PREVIEW (images, videos, audio)
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_preview(): void {
+function api_preview(): void
+{
     $path = $_GET['path'] ?? '';
     $real = fm_validate_path($path);
-    if ($real === false || !is_file($real)) json_error('File not found.');
-    if (fm_is_own_directory($real)) json_error('Access denied.');
+    if ($real === false || !is_file($real))
+        json_error('File not found.');
+    if (fm_is_own_directory($real))
+        json_error('Access denied.');
 
     $mime = fm_mime($real);
 
     // Clear JSON content type, send actual content
-    while (ob_get_level()) ob_end_clean();
+    while (ob_get_level())
+        ob_end_clean();
 
     header('Content-Type: ' . $mime);
     header('Content-Length: ' . filesize($real));
@@ -941,32 +1041,39 @@ function api_preview(): void {
 //  ARCHIVES
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_extract(): void {
+function api_extract(): void
+{
     require_post();
-    if (!class_exists('ZipArchive')) json_error('Zip extension not available.');
+    if (!class_exists('ZipArchive'))
+        json_error('Zip extension not available.');
 
     $data = post_json();
     need($data, 'path');
 
     $real = fm_validate_path($data['path']);
-    if ($real === false || !is_file($real)) json_error('Archive not found.');
-    if (fm_is_own_directory($real)) json_error('Access denied.');
+    if ($real === false || !is_file($real))
+        json_error('Archive not found.');
+    if (fm_is_own_directory($real))
+        json_error('Access denied.');
 
     $ext = fm_ext($real);
-    if ($ext !== 'zip') json_error('Only ZIP extraction is supported.');
+    if ($ext !== 'zip')
+        json_error('Only ZIP extraction is supported.');
 
     // Extract to a folder named after the archive
     $destName = pathinfo(basename($real), PATHINFO_FILENAME);
-    $destDir  = dirname($real) . DIRECTORY_SEPARATOR . $destName;
+    $destDir = dirname($real) . DIRECTORY_SEPARATOR . $destName;
 
     if (file_exists($destDir)) {
         $n = 1;
-        while (file_exists($destDir . " ($n)")) $n++;
+        while (file_exists($destDir . " ($n)"))
+            $n++;
         $destDir .= " ($n)";
     }
 
     $zip = new ZipArchive();
-    if ($zip->open($real) !== true) json_error('Failed to open archive.');
+    if ($zip->open($real) !== true)
+        json_error('Failed to open archive.');
 
     // Security: check all entries for path traversal
     for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -990,19 +1097,24 @@ function api_extract(): void {
     json_ok(['path' => fm_relative($destDir), 'files' => $zip->numFiles ?? 0]);
 }
 
-function api_compress(): void {
+function api_compress(): void
+{
     require_post();
-    if (!class_exists('ZipArchive')) json_error('Zip extension not available.');
+    if (!class_exists('ZipArchive'))
+        json_error('Zip extension not available.');
 
     $data = post_json();
-    if (empty($data['paths']) || !is_array($data['paths'])) json_error('No paths specified.');
+    if (empty($data['paths']) || !is_array($data['paths']))
+        json_error('No paths specified.');
 
     $archiveName = trim($data['name'] ?? 'archive') . '.zip';
-    if (fm_is_blocked_ext($archiveName)) json_error('Invalid archive name.');
+    if (fm_is_blocked_ext($archiveName))
+        json_error('Invalid archive name.');
 
     // Determine destination directory (parent of first item)
     $firstReal = fm_validate_path($data['paths'][0]);
-    if ($firstReal === false) json_error('Invalid path.');
+    if ($firstReal === false)
+        json_error('Invalid path.');
     $destDir = dirname($firstReal);
 
     $archivePath = $destDir . DIRECTORY_SEPARATOR . $archiveName;
@@ -1011,7 +1123,8 @@ function api_compress(): void {
     if (file_exists($archivePath)) {
         $base = pathinfo($archiveName, PATHINFO_FILENAME);
         $n = 1;
-        while (file_exists($destDir . DIRECTORY_SEPARATOR . "$base ($n).zip")) $n++;
+        while (file_exists($destDir . DIRECTORY_SEPARATOR . "$base ($n).zip"))
+            $n++;
         $archivePath = $destDir . DIRECTORY_SEPARATOR . "$base ($n).zip";
     }
 
@@ -1022,8 +1135,10 @@ function api_compress(): void {
 
     foreach ($data['paths'] as $p) {
         $real = fm_validate_path($p);
-        if ($real === false || !file_exists($real)) continue;
-        if (fm_is_own_directory($real)) continue;
+        if ($real === false || !file_exists($real))
+            continue;
+        if (fm_is_own_directory($real))
+            continue;
 
         if (is_dir($real)) {
             $zip->addEmptyDir(basename($real));
@@ -1038,18 +1153,21 @@ function api_compress(): void {
     json_ok(['path' => fm_relative($archivePath), 'name' => basename($archivePath)]);
 }
 
-function api_bulk_download(): void {
-    if (!class_exists('ZipArchive')) json_error('Zip extension not available.');
+function api_bulk_download(): void
+{
+    if (!class_exists('ZipArchive'))
+        json_error('Zip extension not available.');
 
     // Accept paths from GET (comma-separated) or POST
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $data  = post_json();
+        $data = post_json();
         $paths = $data['paths'] ?? [];
     } else {
         $paths = isset($_GET['paths']) ? explode(',', $_GET['paths']) : [];
     }
 
-    if (empty($paths)) json_error('No paths specified.');
+    if (empty($paths))
+        json_error('No paths specified.');
 
     $tmpFile = tempnam(sys_get_temp_dir(), 'fm_bulk_');
     $zip = new ZipArchive();
@@ -1059,8 +1177,10 @@ function api_bulk_download(): void {
 
     foreach ($paths as $p) {
         $real = fm_validate_path(trim($p));
-        if ($real === false || !file_exists($real)) continue;
-        if (fm_is_own_directory($real)) continue;
+        if ($real === false || !file_exists($real))
+            continue;
+        if (fm_is_own_directory($real))
+            continue;
 
         if (is_dir($real)) {
             $zip->addEmptyDir(basename($real));
@@ -1081,18 +1201,22 @@ function api_bulk_download(): void {
 //  TRASH
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_trash_list(): void {
+function api_trash_list(): void
+{
     if (!is_dir(TRASH_DIR)) {
         json_ok(['items' => []]);
     }
 
     $items = [];
     $dh = @opendir(TRASH_DIR);
-    if (!$dh) json_ok(['items' => []]);
+    if (!$dh)
+        json_ok(['items' => []]);
 
     while (($entry = readdir($dh)) !== false) {
-        if ($entry === '.' || $entry === '..' || $entry === '.htaccess') continue;
-        if (substr($entry, -5) === '.meta') continue; // skip meta files
+        if ($entry === '.' || $entry === '..' || $entry === '.htaccess')
+            continue;
+        if (substr($entry, -5) === '.meta')
+            continue; // skip meta files
 
         $metaFile = TRASH_DIR . DIRECTORY_SEPARATOR . $entry . '.meta';
         $meta = file_exists($metaFile) ? json_decode(file_get_contents($metaFile), true) : [];
@@ -1100,11 +1224,11 @@ function api_trash_list(): void {
         $full = TRASH_DIR . DIRECTORY_SEPARATOR . $entry;
         $items[] = [
             'trash_name' => $entry,
-            'original'   => $meta['original'] ?? $entry,
-            'deleted'    => $meta['deleted'] ?? date('Y-m-d H:i:s', filemtime($full)),
-            'user'       => $meta['user'] ?? '?',
-            'is_dir'     => is_dir($full),
-            'size'       => is_dir($full) ? 0 : filesize($full),
+            'original' => $meta['original'] ?? $entry,
+            'deleted' => $meta['deleted'] ?? date('Y-m-d H:i:s', filemtime($full)),
+            'user' => $meta['user'] ?? '?',
+            'is_dir' => is_dir($full),
+            'size' => is_dir($full) ? 0 : filesize($full),
         ];
     }
     closedir($dh);
@@ -1115,7 +1239,8 @@ function api_trash_list(): void {
     json_ok(['items' => $items]);
 }
 
-function api_trash_restore(): void {
+function api_trash_restore(): void
+{
     require_post();
     $data = post_json();
     need($data, 'trash_name');
@@ -1124,30 +1249,35 @@ function api_trash_restore(): void {
     $full = TRASH_DIR . DIRECTORY_SEPARATOR . $trashName;
     $metaFile = $full . '.meta';
 
-    if (!file_exists($full)) json_error('Item not found in trash.');
+    if (!file_exists($full))
+        json_error('Item not found in trash.');
 
     $meta = file_exists($metaFile) ? json_decode(file_get_contents($metaFile), true) : null;
     $original = $meta['original'] ?? '';
 
     if ($original) {
         $dest = fm_validate_path($original);
-        if ($dest === false) json_error('Cannot restore: original location invalid.');
+        if ($dest === false)
+            json_error('Cannot restore: original location invalid.');
 
         // If original exists, rename
         if (file_exists($dest)) {
-            $dir  = dirname($dest);
+            $dir = dirname($dest);
             $base = pathinfo(basename($dest), PATHINFO_FILENAME);
-            $ext  = pathinfo(basename($dest), PATHINFO_EXTENSION);
+            $ext = pathinfo(basename($dest), PATHINFO_EXTENSION);
             $n = 1;
-            while (file_exists($dir . DIRECTORY_SEPARATOR . "$base (restored $n)" . ($ext ? ".$ext" : ''))) $n++;
+            while (file_exists($dir . DIRECTORY_SEPARATOR . "$base (restored $n)" . ($ext ? ".$ext" : '')))
+                $n++;
             $dest = $dir . DIRECTORY_SEPARATOR . "$base (restored $n)" . ($ext ? ".$ext" : '');
         }
 
         // Ensure parent exists
         $parentDir = dirname($dest);
-        if (!is_dir($parentDir)) @mkdir($parentDir, 0755, true);
+        if (!is_dir($parentDir))
+            @mkdir($parentDir, 0755, true);
 
-        if (!@rename($full, $dest)) json_error('Restore failed.');
+        if (!@rename($full, $dest))
+            json_error('Restore failed.');
         @unlink($metaFile);
 
         fm_log('TRASH_RESTORE', fm_relative($dest));
@@ -1157,18 +1287,21 @@ function api_trash_restore(): void {
     json_error('No original path recorded.');
 }
 
-function api_trash_empty(): void {
+function api_trash_empty(): void
+{
     require_post();
     require_admin();
     require_reauth();
 
-    if (!is_dir(TRASH_DIR)) json_ok(['count' => 0]);
+    if (!is_dir(TRASH_DIR))
+        json_ok(['count' => 0]);
 
     $count = 0;
     $dh = @opendir(TRASH_DIR);
     if ($dh) {
         while (($entry = readdir($dh)) !== false) {
-            if ($entry === '.' || $entry === '..' || $entry === '.htaccess') continue;
+            if ($entry === '.' || $entry === '..' || $entry === '.htaccess')
+                continue;
             $full = TRASH_DIR . DIRECTORY_SEPARATOR . $entry;
             if (is_dir($full)) {
                 fm_delete_recursive($full);
@@ -1188,7 +1321,8 @@ function api_trash_empty(): void {
 //  CHMOD (permissions)
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_chmod(): void {
+function api_chmod(): void
+{
     require_post();
     require_admin();
 
@@ -1196,13 +1330,17 @@ function api_chmod(): void {
     need($data, 'path', 'mode');
 
     $real = fm_validate_path($data['path']);
-    if ($real === false || !file_exists($real)) json_error('Not found.');
-    if (fm_is_own_directory($real)) json_error('Access denied.');
+    if ($real === false || !file_exists($real))
+        json_error('Not found.');
+    if (fm_is_own_directory($real))
+        json_error('Access denied.');
 
     $mode = octdec($data['mode']);
-    if ($mode < 0 || $mode > 0777) json_error('Invalid permissions.');
+    if ($mode < 0 || $mode > 0777)
+        json_error('Invalid permissions.');
 
-    if (!@chmod($real, $mode)) json_error('Failed to change permissions.');
+    if (!@chmod($real, $mode))
+        json_error('Failed to change permissions.');
 
     fm_log('CHMOD', fm_relative($real) . ' → ' . $data['mode']);
     json_ok();
@@ -1212,12 +1350,14 @@ function api_chmod(): void {
 //  ADMIN: USERS & SETTINGS
 // ═══════════════════════════════════════════════════════════════════════════
 
-function api_users(): void {
+function api_users(): void
+{
     require_admin();
     json_ok(['users' => fm_list_users()]);
 }
 
-function api_add_user(): void {
+function api_add_user(): void
+{
     require_post();
     require_admin();
     require_reauth();
@@ -1226,11 +1366,13 @@ function api_add_user(): void {
     need($data, 'username', 'password');
 
     $result = fm_add_user($data['username'], $data['password'], $data['role'] ?? 'user');
-    if (!$result['ok']) json_error($result['error']);
+    if (!$result['ok'])
+        json_error($result['error']);
     json_ok();
 }
 
-function api_delete_user(): void {
+function api_delete_user(): void
+{
     require_post();
     require_admin();
     require_reauth();
@@ -1239,11 +1381,13 @@ function api_delete_user(): void {
     need($data, 'username');
 
     $result = fm_delete_user($data['username']);
-    if (!$result['ok']) json_error($result['error']);
+    if (!$result['ok'])
+        json_error($result['error']);
     json_ok();
 }
 
-function api_settings(): void {
+function api_settings(): void
+{
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         json_ok(['settings' => fm_load_settings()]);
     }
@@ -1252,8 +1396,8 @@ function api_settings(): void {
     require_admin();
 
     $data = post_json();
-    $current  = fm_load_settings();
-    $allowed  = ['show_hidden','default_view','items_per_page','enable_trash','max_upload_mb','theme','date_format'];
+    $current = fm_load_settings();
+    $allowed = ['show_hidden', 'default_view', 'items_per_page', 'enable_trash', 'max_upload_mb', 'theme', 'date_format'];
 
     foreach ($allowed as $key) {
         if (array_key_exists($key, $data)) {
