@@ -14,6 +14,7 @@ export function createEventsModule(deps) {
         clipCopy,
         clipCut,
         deleteItems,
+        extractSelectedArchives,
         compressItems,
         selectAll,
         selectNone,
@@ -62,6 +63,7 @@ export function createEventsModule(deps) {
         document.getElementById('btn-sel-copy').addEventListener('click', clipCopy);
         document.getElementById('btn-sel-cut').addEventListener('click', clipCut);
         document.getElementById('btn-sel-delete').addEventListener('click', () => deleteItems([...state.selected]));
+        document.getElementById('btn-sel-extract').addEventListener('click', extractSelectedArchives);
         document.getElementById('btn-sel-compress').addEventListener('click', () => compressItems([...state.selected]));
 
         document.getElementById('select-all').addEventListener('change', (e) => {

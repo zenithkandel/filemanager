@@ -355,11 +355,57 @@ export function createOperationsModule(deps) {
     }
 
     async function extractArchive(item) {
+        if (!item || item.is_dir || item.ext !== 'zip') {
+            toast('Only ZIP files can be extracted.', 'warning');
+            return;
+        }
+
         try {
             await api('extract', { method: 'POST', body: { path: item.path } });
             toast('Archive extracted.', 'success');
             navigate(state.path);
         } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function extractSelectedArchives() {
+        const selectedPaths = [...state.selected];
+        if (selectedPaths.length === 0) {
+            toast('Select one or more ZIP files first.', 'warning');
+            return;
+        }
+
+        const zipPaths = selectedPaths.filter((path) => {
+            const item = state.items.find((i) => i.path === path);
+            return item && !item.is_dir && item.ext === 'zip';
+        });
+
+        if (zipPaths.length === 0) {
+            toast('Only ZIP files can be extracted.', 'warning');
+            return;
+        }
+
+        let extracted = 0;
+        let failed = 0;
+
+        for (const path of zipPaths) {
+            try {
+                await api('extract', { method: 'POST', body: { path } });
+                extracted++;
+            } catch (err) {
+                failed++;
+                const name = path.split('/').pop() || path;
+                toast(`${name}: ${err.message}`, 'error');
+            }
+        }
+
+        if (extracted > 0) {
+            toast(`Extracted ${extracted} ZIP file${extracted === 1 ? '' : 's'}.`, 'success');
+        }
+        if (failed > 0) {
+            toast(`${failed} ZIP file${failed === 1 ? '' : 's'} failed to extract.`, 'warning');
+        }
+
+        navigate(state.path);
     }
 
     async function compressItems(paths) {
@@ -460,7 +506,7 @@ export function createOperationsModule(deps) {
             items.push({ label: 'Copy', icon: 'copy', kbd: 'Ctrl+C', action: clipCopy });
             items.push({ label: 'Cut', icon: 'cut', kbd: 'Ctrl+X', action: clipCut });
 
-            if (item.is_archive) {
+            if (item.ext === 'zip') {
                 items.push('---');
                 items.push({ label: 'Extract', icon: 'archive', action: () => extractArchive(item) });
             }
@@ -780,6 +826,7 @@ export function createOperationsModule(deps) {
         previewFile,
         showFileInfo,
         extractArchive,
+        extractSelectedArchives,
         compressItems,
         handleSearch,
         clipCopy,

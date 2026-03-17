@@ -1,5 +1,8 @@
 <?php
-if (!defined('FM_ACCESS')) { http_response_code(403); exit('Forbidden'); }
+if (!defined('FM_ACCESS')) {
+    http_response_code(403);
+    exit('Forbidden');
+}
 
 function api_extract(): void
 {
@@ -35,15 +38,22 @@ function api_extract(): void
     if ($zip->open($real) !== true)
         json_error('Failed to open archive.');
 
-    // Security: check all entries for path traversal
+    // Security: validate all entries for traversal/absolute paths
     for ($i = 0; $i < $zip->numFiles; $i++) {
         $entryName = $zip->getNameIndex($i);
-        if (strpos($entryName, '..') !== false || strpos($entryName, '\\') !== false) {
+
+        $normalized = str_replace('\\', '/', $entryName);
+        if (
+            str_starts_with($normalized, '/') ||
+            preg_match('#^[A-Za-z]:/#', $normalized) ||
+            preg_match('#(^|/)\.\.(/|$)#', $normalized)
+        ) {
             $zip->close();
             json_error('Archive contains unsafe paths.');
         }
+
         // Block dangerous file types
-        if (fm_is_blocked_ext($entryName)) {
+        if (fm_is_blocked_ext($normalized)) {
             $zip->close();
             json_error("Archive contains blocked file type: $entryName");
         }

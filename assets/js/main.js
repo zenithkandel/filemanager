@@ -90,6 +90,7 @@ function init() {
         clipCopy: operations.clipCopy,
         clipCut: operations.clipCut,
         deleteItems: operations.deleteItems,
+        extractSelectedArchives: operations.extractSelectedArchives,
         compressItems: operations.compressItems,
         selectAll: browser.selectAll,
         selectNone: browser.selectNone,
