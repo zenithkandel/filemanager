@@ -126,7 +126,7 @@ function init() {
             state.settings = {};
         }
 
-        state.view = getSessionPref(state, 'view', state.settings.default_view || 'list');
+        state.view = getSessionPref(state, 'view', state.settings.default_view || 'grid');
         state.path = getSessionPref(state, 'path', '/');
 
         const sessionTheme = getSessionPref(state, 'theme', '');

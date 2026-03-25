@@ -1,6 +1,6 @@
 {
     "show_hidden": true,
-    "default_view": "list",
+    "default_view": "grid",
     "items_per_page": 100,
     "enable_trash": true,
     "max_upload_mb": 512,

@@ -276,7 +276,7 @@ function fm_load_settings(): array
 {
     $defaults = [
         'show_hidden' => false,
-        'default_view' => 'list',        // 'list' | 'grid'
+        'default_view' => 'grid',        // 'list' | 'grid'
         'items_per_page' => 100,
         'enable_trash' => true,
         'max_upload_mb' => 512,

@@ -7,7 +7,7 @@ export const state = {
     clipboard: null,
     sort: 'name',
     order: 'asc',
-    view: 'list',
+    view: 'grid',
     user: '',
     role: '',
     csrf: '',
